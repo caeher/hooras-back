@@ -1,0 +1,2663 @@
+openapi: 3.1.0
+info:
+  title: Social Hours Platform API
+  version: 0.1.0
+  description: >
+    Stack-neutral MVP API contract for a self-hosted social-hours platform.
+    The contract includes core platform endpoints, Odoo-like module
+    management endpoints, and dummy auth/student-data provider endpoints
+    used to demonstrate integration with multiple college-owned systems.
+servers:
+  - url: https://social-hours.example.edu
+    description: Core platform instance
+  - url: https://dummy-auth.example.edu
+    description: Dummy auth provider
+  - url: https://dummy-student-data.example.edu
+    description: Dummy student-data provider
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+  - name: Modules
+  - name: Provider Connections
+  - name: Auth
+  - name: Current User
+  - name: Student Data
+  - name: Student Profile
+  - name: Rules
+  - name: Projects
+  - name: Imports
+  - name: Applications
+  - name: Assignments
+  - name: Hour Logs
+  - name: Documents
+  - name: Certificates
+  - name: Reports
+  - name: Audit
+  - name: Webhooks
+  - name: Demo Auth Provider
+  - name: Demo Student Data Provider
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check platform health
+      operationId: getHealth
+      security: []
+      responses:
+        "200":
+          description: Platform health status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /api/v1/capabilities:
+    get:
+      tags: [Health]
+      summary: List enabled modules and provider capabilities
+      operationId: getCapabilities
+      responses:
+        "200":
+          description: Platform capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [modules, providers]
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ModuleCapability"
+                  providers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProviderCapability"
+
+  /api/v1/modules:
+    get:
+      tags: [Modules]
+      summary: List installed modules
+      operationId: listModules
+      responses:
+        "200":
+          description: Installed modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstalledModule"
+
+  /api/v1/modules/{moduleKey}:
+    get:
+      tags: [Modules]
+      summary: Get an installed module
+      operationId: getModule
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Installed module
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstalledModule"
+
+  /api/v1/modules/{moduleKey}/manifest:
+    get:
+      tags: [Modules]
+      summary: Get module manifest
+      operationId: getModuleManifest
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module manifest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleManifest"
+
+  /api/v1/modules/{moduleKey}/enable:
+    post:
+      tags: [Modules]
+      summary: Enable an installed module
+      operationId: enableModule
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstalledModule"
+
+  /api/v1/modules/{moduleKey}/disable:
+    post:
+      tags: [Modules]
+      summary: Disable an installed module
+      operationId: disableModule
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstalledModule"
+
+  /api/v1/modules/{moduleKey}/config:
+    get:
+      tags: [Modules]
+      summary: Get module configuration
+      operationId: getModuleConfig
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module configuration without secret values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleConfig"
+    put:
+      tags: [Modules]
+      summary: Configure a module
+      operationId: configureModule
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModuleConfigInput"
+      responses:
+        "200":
+          description: Module configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleConfig"
+
+  /api/v1/modules/{moduleKey}/test:
+    post:
+      tags: [Modules]
+      summary: Test module connection and contract readiness
+      operationId: testModule
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleTestResult"
+
+  /api/v1/modules/{moduleKey}/health:
+    get:
+      tags: [Modules]
+      summary: Get module health
+      operationId: getModuleHealth
+      parameters:
+        - $ref: "#/components/parameters/ModuleKey"
+      responses:
+        "200":
+          description: Module health
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleHealth"
+
+  /api/v1/provider-connections:
+    get:
+      tags: [Provider Connections]
+      summary: List provider connections
+      operationId: listProviderConnections
+      responses:
+        "200":
+          description: Provider connections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderConnection"
+    post:
+      tags: [Provider Connections]
+      summary: Create a provider connection
+      operationId: createProviderConnection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderConnectionRequest"
+      responses:
+        "201":
+          description: Provider connection created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderConnection"
+
+  /api/v1/provider-connections/{providerId}:
+    get:
+      tags: [Provider Connections]
+      summary: Get a provider connection
+      operationId: getProviderConnection
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider connection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderConnection"
+    patch:
+      tags: [Provider Connections]
+      summary: Update a provider connection
+      operationId: updateProviderConnection
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderConnectionRequest"
+      responses:
+        "200":
+          description: Provider connection updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderConnection"
+
+  /api/v1/provider-connections/{providerId}/test:
+    post:
+      tags: [Provider Connections]
+      summary: Test a provider connection
+      operationId: testProviderConnection
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderTestResult"
+
+  /api/v1/provider-connections/{providerId}/schema:
+    get:
+      tags: [Provider Connections]
+      summary: Get provider schema metadata
+      operationId: getProviderSchema
+      parameters:
+        - $ref: "#/components/parameters/ProviderId"
+      responses:
+        "200":
+          description: Provider schema metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderSchema"
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login through the enabled auth connector module
+      operationId: loginThroughAuthModule
+      security: []
+      description: >
+        For the MVP, this delegates to the dummy-auth-connector module.
+        Production auth modules may redirect to OIDC, SAML, LDAP, or another
+        college-owned auth system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+      responses:
+        "200":
+          description: Auth token created by the active auth connector
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v1/auth/introspect:
+    post:
+      tags: [Auth]
+      summary: Introspect a token through the enabled auth connector module
+      operationId: introspectThroughAuthModule
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Token introspection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthIntrospectionResult"
+
+  /api/v1/student-data/students:
+    get:
+      tags: [Student Data]
+      summary: Search students through the enabled student-data connector module
+      operationId: searchStudentsThroughModule
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Students returned by the active student-data connector
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentSearchResult"
+
+  /api/v1/student-data/students/{studentRef}/academic-profile:
+    get:
+      tags: [Student Data]
+      summary: Get normalized academic profile through the enabled student-data connector module
+      operationId: getStudentAcademicProfileThroughModule
+      parameters:
+        - $ref: "#/components/parameters/StudentRef"
+      responses:
+        "200":
+          description: Normalized academic profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicProfile"
+
+  /api/v1/student-data/schema:
+    get:
+      tags: [Student Data]
+      summary: Get schema metadata from the enabled student-data connector module
+      operationId: getStudentDataSchemaThroughModule
+      responses:
+        "200":
+          description: Student-data schema metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderSchema"
+
+  /api/v1/me:
+    get:
+      tags: [Current User]
+      summary: Get current user context
+      operationId: getCurrentUser
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+
+  /api/v1/me/profile:
+    get:
+      tags: [Student Profile]
+      summary: Get current student's generated profile
+      operationId: getMyStudentProfile
+      responses:
+        "200":
+          description: Student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+
+  /api/v1/me/profile/refresh:
+    post:
+      tags: [Student Profile]
+      summary: Refresh current student's profile from external student-data provider
+      operationId: refreshMyStudentProfile
+      responses:
+        "200":
+          description: Refreshed student profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProfile"
+
+  /api/v1/rules:
+    get:
+      tags: [Rules]
+      summary: List requirement rules
+      operationId: listRules
+      parameters:
+        - in: query
+          name: facultyCode
+          schema:
+            type: string
+        - in: query
+          name: programCode
+          schema:
+            type: string
+        - in: query
+          name: degreeLevel
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Requirement rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RequirementRule"
+    post:
+      tags: [Rules]
+      summary: Create a requirement rule
+      operationId: createRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequirementRuleInput"
+      responses:
+        "201":
+          description: Requirement rule created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequirementRule"
+
+  /api/v1/rules/evaluate:
+    post:
+      tags: [Rules]
+      summary: Evaluate student eligibility and requirements
+      operationId: evaluateRules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuleEvaluationRequest"
+      responses:
+        "200":
+          description: Rule evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuleEvaluationResult"
+
+  /api/v1/projects:
+    get:
+      tags: [Projects]
+      summary: List projects
+      operationId: listProjects
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ProjectStatus"
+        - in: query
+          name: sourceType
+          schema:
+            $ref: "#/components/schemas/ProjectSourceType"
+        - in: query
+          name: category
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      tags: [Projects]
+      summary: Create a college-owned project
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/projects/{projectId}:
+    get:
+      tags: [Projects]
+      summary: Get a project
+      operationId: getProject
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    patch:
+      tags: [Projects]
+      summary: Update a project
+      operationId: updateProject
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "200":
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/projects/{projectId}/publish:
+    post:
+      tags: [Projects]
+      summary: Publish a project
+      operationId: publishProject
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/projects/{projectId}/archive:
+    post:
+      tags: [Projects]
+      summary: Archive a project
+      operationId: archiveProject
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/imports/firecrawl/runs:
+    post:
+      tags: [Imports]
+      summary: Start a Firecrawl import run
+      operationId: createFirecrawlImportRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirecrawlRunRequest"
+      responses:
+        "202":
+          description: Import run accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportRun"
+
+  /api/v1/imports/firecrawl/results:
+    get:
+      tags: [Imports]
+      summary: List Firecrawl import results
+      operationId: listFirecrawlResults
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ImportResultStatus"
+      responses:
+        "200":
+          description: Import results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImportResult"
+
+  /api/v1/imports/firecrawl/results/{importResultId}/approve:
+    post:
+      tags: [Imports]
+      summary: Approve an imported project result
+      operationId: approveFirecrawlResult
+      parameters:
+        - $ref: "#/components/parameters/ImportResultId"
+      responses:
+        "201":
+          description: Project created from import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /api/v1/imports/firecrawl/results/{importResultId}/reject:
+    post:
+      tags: [Imports]
+      summary: Reject an imported project result
+      operationId: rejectFirecrawlResult
+      parameters:
+        - $ref: "#/components/parameters/ImportResultId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Import result rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  /api/v1/projects/{projectId}/applications:
+    post:
+      tags: [Applications]
+      summary: Apply to a project
+      operationId: createApplication
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationInput"
+      responses:
+        "201":
+          description: Application created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectApplication"
+
+  /api/v1/applications:
+    get:
+      tags: [Applications]
+      summary: List applications
+      operationId: listApplications
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ApplicationStatus"
+        - in: query
+          name: studentRef
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectApplication"
+
+  /api/v1/applications/{applicationId}/approve:
+    post:
+      tags: [Applications]
+      summary: Approve an application
+      operationId: approveApplication
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      responses:
+        "200":
+          description: Application approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectApplication"
+
+  /api/v1/applications/{applicationId}/reject:
+    post:
+      tags: [Applications]
+      summary: Reject an application
+      operationId: rejectApplication
+      parameters:
+        - $ref: "#/components/parameters/ApplicationId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Application rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectApplication"
+
+  /api/v1/assignments:
+    get:
+      tags: [Assignments]
+      summary: List assignments
+      operationId: listAssignments
+      parameters:
+        - in: query
+          name: studentRef
+          schema:
+            type: string
+        - in: query
+          name: projectId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assignment"
+
+  /api/v1/assignments/{assignmentId}/supervisor:
+    put:
+      tags: [Assignments]
+      summary: Assign or replace supervisor
+      operationId: setAssignmentSupervisor
+      parameters:
+        - $ref: "#/components/parameters/AssignmentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [supervisorRef]
+              properties:
+                supervisorRef:
+                  type: string
+      responses:
+        "200":
+          description: Assignment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assignment"
+
+  /api/v1/hour-logs:
+    get:
+      tags: [Hour Logs]
+      summary: List hour logs
+      operationId: listHourLogs
+      parameters:
+        - in: query
+          name: assignmentId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/ApprovalStatus"
+      responses:
+        "200":
+          description: Hour logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HourLog"
+    post:
+      tags: [Hour Logs]
+      summary: Submit an hour log
+      operationId: createHourLog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HourLogInput"
+      responses:
+        "201":
+          description: Hour log created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HourLog"
+
+  /api/v1/hour-logs/{hourLogId}/approve:
+    post:
+      tags: [Hour Logs]
+      summary: Approve an hour log
+      operationId: approveHourLog
+      parameters:
+        - $ref: "#/components/parameters/HourLogId"
+      responses:
+        "200":
+          description: Hour log approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HourLog"
+
+  /api/v1/hour-logs/{hourLogId}/reject:
+    post:
+      tags: [Hour Logs]
+      summary: Reject an hour log
+      operationId: rejectHourLog
+      parameters:
+        - $ref: "#/components/parameters/HourLogId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Hour log rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HourLog"
+
+  /api/v1/document-requirements:
+    get:
+      tags: [Documents]
+      summary: List configured document requirements
+      operationId: listDocumentRequirements
+      responses:
+        "200":
+          description: Document requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentRequirement"
+    post:
+      tags: [Documents]
+      summary: Create a document requirement
+      operationId: createDocumentRequirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequirementInput"
+      responses:
+        "201":
+          description: Document requirement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentRequirement"
+
+  /api/v1/documents:
+    get:
+      tags: [Documents]
+      summary: List uploaded documents
+      operationId: listDocuments
+      parameters:
+        - in: query
+          name: studentRef
+          schema:
+            type: string
+        - in: query
+          name: assignmentId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Uploaded documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentUpload"
+    post:
+      tags: [Documents]
+      summary: Register a document upload
+      operationId: createDocumentUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUploadInput"
+      responses:
+        "201":
+          description: Document upload registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentUpload"
+
+  /api/v1/documents/{documentId}/approve:
+    post:
+      tags: [Documents]
+      summary: Approve an uploaded document
+      operationId: approveDocument
+      parameters:
+        - $ref: "#/components/parameters/DocumentId"
+      responses:
+        "200":
+          description: Document approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentUpload"
+
+  /api/v1/documents/{documentId}/reject:
+    post:
+      tags: [Documents]
+      summary: Reject an uploaded document
+      operationId: rejectDocument
+      parameters:
+        - $ref: "#/components/parameters/DocumentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Document rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentUpload"
+
+  /api/v1/certificates/generate:
+    post:
+      tags: [Certificates]
+      summary: Generate a social-hours completion certificate
+      operationId: generateCertificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentRef]
+              properties:
+                studentRef:
+                  type: string
+                assignmentId:
+                  type: string
+                  format: uuid
+      responses:
+        "201":
+          description: Certificate generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Certificate"
+
+  /api/v1/reports/progress:
+    get:
+      tags: [Reports]
+      summary: Get progress report
+      operationId: getProgressReport
+      parameters:
+        - in: query
+          name: programCode
+          schema:
+            type: string
+        - in: query
+          name: projectId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Progress report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressReport"
+
+  /api/v1/reports/projects:
+    get:
+      tags: [Reports]
+      summary: Get project report
+      operationId: getProjectReport
+      responses:
+        "200":
+          description: Project report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectReport"
+
+  /api/v1/audit-log:
+    get:
+      tags: [Audit]
+      summary: List audit events
+      operationId: listAuditEvents
+      parameters:
+        - in: query
+          name: actorRef
+          schema:
+            type: string
+        - in: query
+          name: entityType
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEvent"
+
+  /api/v1/webhooks/student-data/updated:
+    post:
+      tags: [Webhooks]
+      summary: Receive student-data update notification
+      operationId: receiveStudentDataUpdatedWebhook
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentDataUpdatedEvent"
+      responses:
+        "202":
+          description: Event accepted
+
+  /api/v1/webhooks/notifications/status:
+    post:
+      tags: [Webhooks]
+      summary: Receive notification delivery status
+      operationId: receiveNotificationStatusWebhook
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationStatusEvent"
+      responses:
+        "202":
+          description: Event accepted
+
+  /api/v1/webhooks/workflows/project-posted:
+    post:
+      tags: [Webhooks]
+      summary: Receive workflow result for project posting
+      operationId: receiveProjectPostedWebhook
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectPostedEvent"
+      responses:
+        "202":
+          description: Event accepted
+
+  /api/v1/webhooks/scraper/crawl-completed:
+    post:
+      tags: [Webhooks]
+      summary: Receive scraper crawl completion event
+      operationId: receiveCrawlCompletedWebhook
+      security:
+        - webhookSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrawlCompletedEvent"
+      responses:
+        "202":
+          description: Event accepted
+
+  /demo-auth/.well-known/openid-configuration:
+    get:
+      tags: [Demo Auth Provider]
+      summary: Get dummy auth provider metadata
+      operationId: getDemoAuthConfiguration
+      security: []
+      responses:
+        "200":
+          description: Dummy auth provider metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [issuer, token_endpoint, userinfo_endpoint, introspection_endpoint]
+                properties:
+                  issuer:
+                    type: string
+                    format: uri
+                  token_endpoint:
+                    type: string
+                    format: uri
+                  userinfo_endpoint:
+                    type: string
+                    format: uri
+                  introspection_endpoint:
+                    type: string
+                    format: uri
+
+  /demo-auth/oauth/token:
+    post:
+      tags: [Demo Auth Provider]
+      summary: Issue a dummy access token
+      operationId: issueDemoAuthToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grantType, username, password]
+              properties:
+                grantType:
+                  type: string
+                  enum: [password]
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                providerProfile:
+                  type: string
+                  description: Demo profile used to simulate a college auth provider.
+      responses:
+        "200":
+          description: Access token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoTokenResponse"
+
+  /demo-auth/oauth/introspect:
+    post:
+      tags: [Demo Auth Provider]
+      summary: Introspect a dummy token
+      operationId: introspectDemoAuthToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Token introspection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoTokenIntrospection"
+
+  /demo-auth/userinfo:
+    get:
+      tags: [Demo Auth Provider]
+      summary: Get dummy user information
+      operationId: getDemoUserInfo
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dummy user information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoUserInfo"
+
+  /demo-auth/users:
+    get:
+      tags: [Demo Auth Provider]
+      summary: List dummy users
+      operationId: listDemoUsers
+      security: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            $ref: "#/components/schemas/UserRole"
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dummy users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoUserInfo"
+
+  /demo-student-data/schema:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: Get dummy student-data provider schema
+      operationId: getDemoStudentDataSchema
+      security: []
+      parameters:
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dummy student-data schema
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderSchema"
+
+  /demo-student-data/students:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: Search dummy students
+      operationId: searchDemoStudents
+      security: []
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dummy students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoStudent"
+
+  /demo-student-data/students/{externalStudentId}:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: Get dummy student by external ID
+      operationId: getDemoStudent
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ExternalStudentId"
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dummy student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoStudent"
+
+  /demo-student-data/students/{externalStudentId}/academic-profile:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: Get normalized academic profile from dummy provider
+      operationId: getDemoAcademicProfile
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ExternalStudentId"
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Academic profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcademicProfile"
+
+  /demo-student-data/students/{externalStudentId}/program-progress:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: Get dummy program progress
+      operationId: getDemoProgramProgress
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ExternalStudentId"
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Program progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramProgress"
+
+  /demo-student-data/programs:
+    get:
+      tags: [Demo Student Data Provider]
+      summary: List dummy academic programs
+      operationId: listDemoPrograms
+      security: []
+      parameters:
+        - in: query
+          name: providerProfile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Programs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AcademicProgram"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    webhookSignature:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+
+  parameters:
+    ModuleKey:
+      in: path
+      name: moduleKey
+      required: true
+      schema:
+        type: string
+      examples:
+        dummyAuth:
+          value: dummy-auth-connector
+        dummyStudentData:
+          value: dummy-student-data-connector
+    StudentRef:
+      in: path
+      name: studentRef
+      required: true
+      schema:
+        type: string
+    ProviderId:
+      in: path
+      name: providerId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ProjectId:
+      in: path
+      name: projectId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ImportResultId:
+      in: path
+      name: importResultId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ApplicationId:
+      in: path
+      name: applicationId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AssignmentId:
+      in: path
+      name: assignmentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    HourLogId:
+      in: path
+      name: hourLogId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DocumentId:
+      in: path
+      name: documentId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ExternalStudentId:
+      in: path
+      name: externalStudentId
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status, checkedAt]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        checkedAt:
+          type: string
+          format: date-time
+
+    ModuleCapability:
+      type: object
+      required: [key, enabled]
+      properties:
+        key:
+          type: string
+        enabled:
+          type: boolean
+        version:
+          type: string
+
+    ModuleType:
+      type: string
+      enum:
+        - auth_connector
+        - student_data_connector
+        - notification_connector
+        - workflow_connector
+        - scraper_connector
+        - document_template
+        - reporting_extension
+        - rules_extension
+
+    ModuleStatus:
+      type: string
+      enum: [installed, enabled, disabled, misconfigured, failing]
+
+    ModuleManifest:
+      type: object
+      required: [moduleKey, displayName, version, moduleType, capabilities]
+      properties:
+        moduleKey:
+          type: string
+          examples: [dummy-auth-connector, dummy-student-data-connector]
+        displayName:
+          type: string
+        version:
+          type: string
+        moduleType:
+          $ref: "#/components/schemas/ModuleType"
+        description:
+          type: string
+        author:
+          type: string
+        license:
+          type: string
+        platformVersion:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        providedContracts:
+          type: array
+          items:
+            type: string
+          examples:
+            - [auth.v1]
+            - [student_data.v1]
+        requiredContracts:
+          type: array
+          items:
+            type: string
+        requiredSecrets:
+          type: array
+          items:
+            type: string
+        configurationSchema:
+          type: object
+          additionalProperties: true
+        permissions:
+          type: array
+          items:
+            type: string
+        webhookSubscriptions:
+          type: array
+          items:
+            type: string
+        eventSubscriptions:
+          type: array
+          items:
+            type: string
+
+    InstalledModule:
+      type: object
+      required: [moduleKey, displayName, version, moduleType, status, enabled]
+      properties:
+        moduleKey:
+          type: string
+        displayName:
+          type: string
+        version:
+          type: string
+        moduleType:
+          $ref: "#/components/schemas/ModuleType"
+        status:
+          $ref: "#/components/schemas/ModuleStatus"
+        enabled:
+          type: boolean
+        capabilities:
+          type: array
+          items:
+            type: string
+        health:
+          $ref: "#/components/schemas/ModuleHealth"
+        installedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ModuleConfig:
+      type: object
+      required: [moduleKey, configured]
+      properties:
+        moduleKey:
+          type: string
+        configured:
+          type: boolean
+        values:
+          type: object
+          additionalProperties: true
+          description: Non-secret module configuration values.
+        secretNames:
+          type: array
+          items:
+            type: string
+          description: Names of configured secrets. Secret values are never returned.
+        updatedAt:
+          type: string
+          format: date-time
+
+    ModuleConfigInput:
+      type: object
+      properties:
+        values:
+          type: object
+          additionalProperties: true
+        secrets:
+          type: object
+          additionalProperties:
+            type: string
+          writeOnly: true
+
+    ModuleTestResult:
+      type: object
+      required: [moduleKey, status, checkedAt]
+      properties:
+        moduleKey:
+          type: string
+        status:
+          type: string
+          enum: [success, failure]
+        contract:
+          type: string
+          examples: [auth.v1, student_data.v1]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        checkedAt:
+          type: string
+          format: date-time
+
+    ModuleHealth:
+      type: object
+      required: [moduleKey, status, checkedAt]
+      properties:
+        moduleKey:
+          type: string
+        status:
+          type: string
+          enum: [ok, degraded, down, unknown]
+        message:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+
+    ProviderCapability:
+      type: object
+      required: [providerKey, providerType, status, capabilities]
+      properties:
+        moduleKey:
+          type: string
+        providerKey:
+          type: string
+        providerType:
+          $ref: "#/components/schemas/ProviderType"
+        status:
+          type: string
+          enum: [configured, connected, failing, disabled]
+        capabilities:
+          type: array
+          items:
+            type: string
+
+    ProviderType:
+      type: string
+      enum: [auth, student_data, email, workflow, scraper]
+
+    ProviderConnection:
+      type: object
+      required: [id, moduleKey, providerKey, providerType, baseUrl, enabled, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        moduleKey:
+          type: string
+          examples: [dummy-auth-connector, dummy-student-data-connector]
+        providerKey:
+          type: string
+          examples: [dummy-auth, datamcp, zavu, n8n, firecrawl]
+        providerType:
+          $ref: "#/components/schemas/ProviderType"
+        baseUrl:
+          type: string
+          format: uri
+        enabled:
+          type: boolean
+        authMethod:
+          type: string
+          enum: [none, bearer_token, api_key, oauth2, signed_webhook]
+        capabilities:
+          type: array
+          items:
+            type: string
+        fieldMappings:
+          type: object
+          additionalProperties: true
+        lastHealthStatus:
+          type: string
+          enum: [unknown, ok, degraded, down]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateProviderConnectionRequest:
+      type: object
+      required: [moduleKey, providerKey, providerType, baseUrl, authMethod]
+      properties:
+        moduleKey:
+          type: string
+        providerKey:
+          type: string
+        providerType:
+          $ref: "#/components/schemas/ProviderType"
+        baseUrl:
+          type: string
+          format: uri
+        authMethod:
+          type: string
+          enum: [none, bearer_token, api_key, oauth2, signed_webhook]
+        secret:
+          type: string
+          writeOnly: true
+        fieldMappings:
+          type: object
+          additionalProperties: true
+
+    UpdateProviderConnectionRequest:
+      type: object
+      properties:
+        baseUrl:
+          type: string
+          format: uri
+        enabled:
+          type: boolean
+        secret:
+          type: string
+          writeOnly: true
+        fieldMappings:
+          type: object
+          additionalProperties: true
+
+    ProviderTestResult:
+      type: object
+      required: [status, checkedAt]
+      properties:
+        status:
+          type: string
+          enum: [success, failure]
+        message:
+          type: string
+        checkedAt:
+          type: string
+          format: date-time
+
+    ProviderSchema:
+      type: object
+      required: [providerKey, fields]
+      properties:
+        providerKey:
+          type: string
+        providerProfile:
+          type: string
+        fields:
+          type: array
+          items:
+            type: object
+            required: [path, type]
+            properties:
+              path:
+                type: string
+              type:
+                type: string
+              required:
+                type: boolean
+              description:
+                type: string
+
+    AuthLoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        moduleKey:
+          type: string
+          default: dummy-auth-connector
+          description: Optional module override for demos. Production should normally use the active auth connector.
+        providerProfile:
+          type: string
+          description: Dummy-provider profile used to simulate a college auth provider.
+
+    AuthTokenResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn, issuedByModule]
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum: [Bearer]
+        expiresIn:
+          type: integer
+        refreshToken:
+          type: string
+        issuedByModule:
+          type: string
+          examples: [dummy-auth-connector]
+        user:
+          $ref: "#/components/schemas/CurrentUser"
+
+    AuthIntrospectionResult:
+      type: object
+      required: [active, checkedByModule]
+      properties:
+        active:
+          type: boolean
+        checkedByModule:
+          type: string
+          examples: [dummy-auth-connector]
+        externalUserId:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+        expiresAt:
+          type: string
+          format: date-time
+
+    StudentSearchResult:
+      type: object
+      required: [studentRef, externalStudentId, displayName, resolvedByModule]
+      properties:
+        studentRef:
+          type: string
+        externalStudentId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        programCode:
+          type: string
+        programName:
+          type: string
+        resolvedByModule:
+          type: string
+          examples: [dummy-student-data-connector]
+
+    CurrentUser:
+      type: object
+      required: [externalUserId, providerKey, roles]
+      properties:
+        externalUserId:
+          type: string
+        moduleKey:
+          type: string
+        providerKey:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+        studentRef:
+          type: string
+
+    UserRole:
+      type: string
+      enum: [student, coordinator, faculty_supervisor, external_supervisor, admin, auditor]
+
+    AcademicProfile:
+      type: object
+      required: [studentRef, externalStudentId, programCode, programName, academicStatus]
+      properties:
+        studentRef:
+          type: string
+        externalStudentId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        facultyCode:
+          type: string
+        facultyName:
+          type: string
+        programCode:
+          type: string
+        programName:
+          type: string
+        degreeLevel:
+          type: string
+          enum: [technical, teaching, bachelor, engineering, architecture, master, doctorate, other]
+        modality:
+          type: string
+          enum: [onsite, online, hybrid, other]
+        cohort:
+          type: string
+        academicStatus:
+          type: string
+          enum: [active, egresado, graduate_candidate, inactive, unknown]
+        approvedCredits:
+          type: number
+        totalCredits:
+          type: number
+        approvedSubjects:
+          type: integer
+        totalSubjects:
+          type: integer
+        progressPercentage:
+          type: number
+          minimum: 0
+          maximum: 100
+        gpa:
+          type: number
+        completedCourseCodes:
+          type: array
+          items:
+            type: string
+        skills:
+          type: array
+          items:
+            type: string
+        lastSyncedAt:
+          type: string
+          format: date-time
+
+    StudentProfile:
+      type: object
+      required: [studentRef, academicProfile, eligibility]
+      properties:
+        studentRef:
+          type: string
+        academicProfile:
+          $ref: "#/components/schemas/AcademicProfile"
+        eligibility:
+          $ref: "#/components/schemas/RuleEvaluationResult"
+        completedHours:
+          type: number
+        remainingHours:
+          type: number
+        requiredDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentRequirement"
+        recommendedProjectCategories:
+          type: array
+          items:
+            type: string
+
+    RequirementRule:
+      allOf:
+        - $ref: "#/components/schemas/RequirementRuleInput"
+        - type: object
+          required: [id, createdAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+
+    RequirementRuleInput:
+      type: object
+      required: [name, scope, requiredHours]
+      properties:
+        name:
+          type: string
+        scope:
+          type: object
+          properties:
+            facultyCode:
+              type: string
+            programCode:
+              type: string
+            degreeLevel:
+              type: string
+            modality:
+              type: string
+        requiredHours:
+          type: number
+        categoryHours:
+          type: object
+          additionalProperties:
+            type: number
+        minimumProgressPercentage:
+          type: number
+        requiredAcademicStatuses:
+          type: array
+          items:
+            type: string
+        requiredCourseCodes:
+          type: array
+          items:
+            type: string
+        calendarDuration:
+          type: object
+          properties:
+            value:
+              type: integer
+            unit:
+              type: string
+              enum: [days, weeks, months, years]
+        active:
+          type: boolean
+          default: true
+
+    RuleEvaluationRequest:
+      type: object
+      required: [studentRef]
+      properties:
+        studentRef:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        academicProfile:
+          $ref: "#/components/schemas/AcademicProfile"
+
+    RuleEvaluationResult:
+      type: object
+      required: [status, requiredHours, matchedRuleIds]
+      properties:
+        status:
+          type: string
+          enum: [eligible, not_eligible, manual_review, missing_data]
+        requiredHours:
+          type: number
+        requiredCategoryHours:
+          type: object
+          additionalProperties:
+            type: number
+        matchedRuleIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        failedRules:
+          type: array
+          items:
+            type: string
+        missingData:
+          type: array
+          items:
+            type: string
+        explanation:
+          type: string
+
+    Project:
+      allOf:
+        - $ref: "#/components/schemas/ProjectInput"
+        - type: object
+          required: [id, status, sourceType, createdAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              $ref: "#/components/schemas/ProjectStatus"
+            sourceType:
+              $ref: "#/components/schemas/ProjectSourceType"
+            sourceUrl:
+              type: string
+              format: uri
+            extractionConfidence:
+              type: number
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    ProjectInput:
+      type: object
+      required: [title, description, organizationName, categories]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        organizationName:
+          type: string
+        location:
+          type: string
+        modality:
+          type: string
+          enum: [onsite, remote, hybrid]
+        categories:
+          type: array
+          items:
+            type: string
+        capacity:
+          type: integer
+        startsAt:
+          type: string
+          format: date
+        endsAt:
+          type: string
+          format: date
+        applicationDeadline:
+          type: string
+          format: date
+        publicSafe:
+          type: boolean
+          default: false
+
+    ProjectStatus:
+      type: string
+      enum: [draft, pending_review, published, accepting_applications, in_execution, closed, archived, rejected, cancelled, suspended]
+
+    ProjectSourceType:
+      type: string
+      enum: [college_created, scraped]
+
+    FirecrawlRunRequest:
+      type: object
+      required: [startUrls]
+      properties:
+        startUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        query:
+          type: string
+        maxPages:
+          type: integer
+          minimum: 1
+
+    ImportRun:
+      type: object
+      required: [id, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+
+    ImportResult:
+      type: object
+      required: [id, status, sourceUrl, extractedProject]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/ImportResultStatus"
+        sourceUrl:
+          type: string
+          format: uri
+        extractedProject:
+          $ref: "#/components/schemas/ProjectInput"
+        extractionConfidence:
+          type: number
+        duplicateProjectIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    ImportResultStatus:
+      type: string
+      enum: [pending_review, approved, rejected, duplicate]
+
+    ApplicationInput:
+      type: object
+      properties:
+        studentRef:
+          type: string
+        motivation:
+          type: string
+
+    ProjectApplication:
+      type: object
+      required: [id, projectId, studentRef, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        studentRef:
+          type: string
+        status:
+          $ref: "#/components/schemas/ApplicationStatus"
+        motivation:
+          type: string
+        rejectionReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ApplicationStatus:
+      type: string
+      enum: [submitted, approved, rejected, cancelled, waitlisted]
+
+    Assignment:
+      type: object
+      required: [id, projectId, studentRef, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        studentRef:
+          type: string
+        supervisorRef:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, cancelled, suspended]
+
+    HourLogInput:
+      type: object
+      required: [assignmentId, date, durationHours, category, description]
+      properties:
+        assignmentId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: string
+        durationHours:
+          type: number
+        category:
+          type: string
+          enum: [disciplinary, environmental, community, research, administrative, other]
+        description:
+          type: string
+        evidenceIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    HourLog:
+      allOf:
+        - $ref: "#/components/schemas/HourLogInput"
+        - type: object
+          required: [id, status, createdAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              $ref: "#/components/schemas/ApprovalStatus"
+            rejectionReason:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    ApprovalStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    DocumentRequirementInput:
+      type: object
+      required: [key, label, required, allowedFileTypes]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        required:
+          type: boolean
+        appliesTo:
+          type: object
+          properties:
+            projectType:
+              type: string
+            facultyCode:
+              type: string
+            programCode:
+              type: string
+        allowedFileTypes:
+          type: array
+          items:
+            type: string
+        maxFileSizeMb:
+          type: integer
+        requiresApproval:
+          type: boolean
+        templateId:
+          type: string
+
+    DocumentRequirement:
+      allOf:
+        - $ref: "#/components/schemas/DocumentRequirementInput"
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+
+    DocumentUploadInput:
+      type: object
+      required: [documentRequirementId, ownerRef, fileName, storageRef]
+      properties:
+        documentRequirementId:
+          type: string
+          format: uuid
+        ownerRef:
+          type: string
+          description: Student, assignment, project, or certificate owner reference.
+        fileName:
+          type: string
+        storageRef:
+          type: string
+        assignmentId:
+          type: string
+          format: uuid
+
+    DocumentUpload:
+      allOf:
+        - $ref: "#/components/schemas/DocumentUploadInput"
+        - type: object
+          required: [id, status, uploadedAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              $ref: "#/components/schemas/ApprovalStatus"
+            rejectionReason:
+              type: string
+            uploadedAt:
+              type: string
+              format: date-time
+
+    Certificate:
+      type: object
+      required: [id, studentRef, status, generatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        studentRef:
+          type: string
+        assignmentId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [generated, revoked]
+        documentId:
+          type: string
+          format: uuid
+        verificationCode:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+
+    ProgressReport:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        eligibleStudents:
+          type: integer
+        activeAssignments:
+          type: integer
+        completedAssignments:
+          type: integer
+        approvedHours:
+          type: number
+        pendingHourLogs:
+          type: integer
+
+    ProjectReport:
+      type: object
+      properties:
+        totalProjects:
+          type: integer
+        publishedProjects:
+          type: integer
+        scrapedPendingReview:
+          type: integer
+        applications:
+          type: integer
+        activeAssignments:
+          type: integer
+
+    AuditEvent:
+      type: object
+      required: [id, actorRef, action, entityType, entityId, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        actorRef:
+          type: string
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    StudentDataUpdatedEvent:
+      type: object
+      required: [providerKey, externalStudentId, occurredAt]
+      properties:
+        providerKey:
+          type: string
+        externalStudentId:
+          type: string
+        changedFields:
+          type: array
+          items:
+            type: string
+        occurredAt:
+          type: string
+          format: date-time
+
+    NotificationStatusEvent:
+      type: object
+      required: [providerKey, messageId, status]
+      properties:
+        providerKey:
+          type: string
+        messageId:
+          type: string
+        status:
+          type: string
+          enum: [queued, sent, delivered, failed, bounced]
+        occurredAt:
+          type: string
+          format: date-time
+
+    ProjectPostedEvent:
+      type: object
+      required: [providerKey, projectId, status]
+      properties:
+        providerKey:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [posted, failed]
+        externalUrl:
+          type: string
+          format: uri
+
+    CrawlCompletedEvent:
+      type: object
+      required: [providerKey, runId, status]
+      properties:
+        providerKey:
+          type: string
+        runId:
+          type: string
+        status:
+          type: string
+          enum: [completed, failed]
+        resultCount:
+          type: integer
+
+    DemoTokenResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum: [Bearer]
+        expiresIn:
+          type: integer
+        refreshToken:
+          type: string
+
+    DemoTokenIntrospection:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+        sub:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+        exp:
+          type: integer
+
+    DemoUserInfo:
+      type: object
+      required: [sub, roles]
+      properties:
+        sub:
+          type: string
+        externalUserId:
+          type: string
+        externalStudentId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserRole"
+        providerProfile:
+          type: string
+
+    DemoStudent:
+      type: object
+      required: [externalStudentId, displayName]
+      properties:
+        externalStudentId:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+          format: email
+        raw:
+          type: object
+          additionalProperties: true
+          description: Provider-specific raw shape used to test mappings.
+
+    ProgramProgress:
+      type: object
+      properties:
+        externalStudentId:
+          type: string
+        approvedCredits:
+          type: number
+        totalCredits:
+          type: number
+        approvedSubjects:
+          type: integer
+        totalSubjects:
+          type: integer
+        progressPercentage:
+          type: number
+
+    AcademicProgram:
+      type: object
+      required: [programCode, programName]
+      properties:
+        facultyCode:
+          type: string
+        facultyName:
+          type: string
+        programCode:
+          type: string
+        programName:
+          type: string
+        degreeLevel:
+          type: string
+        modality:
+          type: string
