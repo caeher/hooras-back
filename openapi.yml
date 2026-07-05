@@ -4,24 +4,43 @@ info:
   version: 0.1.0
   description: >
     Stack-neutral MVP API contract for a self-hosted social-hours platform.
+
     The contract includes core platform endpoints, Odoo-like module
+
     management endpoints, and dummy auth/student-data provider endpoints
+
     used to demonstrate integration with multiple college-owned systems.
+
 
     ## Student RBAC (whitelist)
 
-    Users with only the `student` role may access a fixed allowlist of endpoints.
-    All other `/api/v1/*` routes return 403. Staff roles (`admin`, `coordinator`,
-    `faculty_supervisor`, `external_supervisor`, `auditor`) bypass the whitelist.
+
+    Users with only the `student` role may access a fixed allowlist of
+    endpoints.
+
+    All other `/api/v1/*` routes return 403. Staff roles (`admin`,
+    `coordinator`,
+
+    `faculty_supervisor`, `external_supervisor`, `auditor`) bypass the
+    whitelist.
+
 
     | Method | Path | Student |
+
     |--------|------|---------|
-    | POST | /api/v1/auth/login, /api/v1/auth/introspect | yes |
-    | GET | /api/v1/me, /api/v1/me/profile, /api/v1/me/applications, /api/v1/me/assignments, /api/v1/me/hour-logs, /api/v1/me/document-requirements, /api/v1/me/document-uploads, /api/v1/me/notifications, /api/v1/me/social-services/history | yes |
-    | POST | /api/v1/me/profile/refresh, /api/v1/me/hour-logs, /api/v1/me/evidence, /api/v1/me/document-requirements/{id}/upload | yes |
+
+    | GET | /api/v1/me/?, /api/v1/me/applications, /api/v1/me/assignments,
+    /api/v1/me/document-requirements, /api/v1/me/document-uploads,
+    /api/v1/me/hour-logs, /api/v1/me/notifications, /api/v1/me/profile,
+    /api/v1/me/social-services/history, /api/v1/projects/?,
+    /api/v1/projects/{id} | yes (published only) |
+
+    | POST | /api/v1/auth/introspect, /api/v1/auth/login,
+    /api/v1/me/document-requirements/{id}/upload, /api/v1/me/evidence,
+    /api/v1/me/hour-logs, /api/v1/me/profile/refresh,
+    /api/v1/projects/{id}/applications/? | yes |
+
     | PATCH | /api/v1/me/notifications/{id}/read | yes |
-    | GET | /api/v1/projects, /api/v1/projects/{id} | yes (published only) |
-    | POST | /api/v1/projects/{projectId}/applications | yes |
 servers:
   - url: https://social-hours.example.edu
     description: Core platform instance
@@ -56,7 +75,7 @@ tags:
 paths:
   /health:
     get:
-      tags: [Health]
+      tags: [ Health ]
       summary: Check platform health
       operationId: getHealth
       security: []
@@ -70,7 +89,7 @@ paths:
 
   /api/v1/capabilities:
     get:
-      tags: [Health]
+      tags: [ Health ]
       summary: List enabled modules and provider capabilities
       operationId: getCapabilities
       responses:
@@ -80,7 +99,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [modules, providers]
+                required: [ modules, providers ]
                 properties:
                   modules:
                     type: array
@@ -93,10 +112,11 @@ paths:
 
   /api/v1/modules/available:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: List available modules in the catalog
       operationId: listAvailableModules
-      description: Requires admin role. Returns discoverable modules and whether each is installed.
+      description: Requires admin role. Returns discoverable modules and whether each
+        is installed.
       responses:
         "200":
           description: Available modules
@@ -109,7 +129,7 @@ paths:
 
   /api/v1/modules:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: List installed modules
       operationId: listModules
       description: Requires admin role.
@@ -125,7 +145,7 @@ paths:
 
   /api/v1/modules/{moduleKey}:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Get an installed module
       operationId: getModule
       parameters:
@@ -140,7 +160,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/manifest:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Get module manifest
       operationId: getModuleManifest
       description: Available to any authenticated user.
@@ -156,7 +176,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/install:
     post:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Install a module
       operationId: installModule
       parameters:
@@ -171,7 +191,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/uninstall:
     post:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Uninstall a module
       operationId: uninstallModule
       parameters:
@@ -183,7 +203,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [moduleKey, uninstalled]
+                required: [ moduleKey, uninstalled ]
                 properties:
                   moduleKey:
                     type: string
@@ -192,7 +212,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/enable:
     post:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Enable an installed module
       operationId: enableModule
       parameters:
@@ -207,7 +227,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/disable:
     post:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Disable an installed module
       operationId: disableModule
       parameters:
@@ -222,7 +242,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/config:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Get module configuration
       operationId: getModuleConfig
       parameters:
@@ -235,7 +255,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ModuleConfig"
     put:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Configure a module
       operationId: configureModule
       parameters:
@@ -256,7 +276,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/features:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: List module feature toggles
       operationId: listModuleFeatures
       parameters:
@@ -271,7 +291,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/ModuleFeature"
     put:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Update module feature toggles
       operationId: updateModuleFeatures
       parameters:
@@ -294,7 +314,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/test:
     post:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Test module connection and contract readiness
       operationId: testModule
       parameters:
@@ -309,7 +329,7 @@ paths:
 
   /api/v1/modules/{moduleKey}/health:
     get:
-      tags: [Modules]
+      tags: [ Modules ]
       summary: Get module health
       operationId: getModuleHealth
       description: Available to any authenticated user.
@@ -325,7 +345,7 @@ paths:
 
   /api/v1/provider-connections:
     get:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: List provider connections
       operationId: listProviderConnections
       description: Requires admin role.
@@ -339,7 +359,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/ProviderConnection"
     post:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: Create a provider connection
       operationId: createProviderConnection
       requestBody:
@@ -358,7 +378,7 @@ paths:
 
   /api/v1/provider-connections/{providerId}:
     get:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: Get a provider connection
       operationId: getProviderConnection
       parameters:
@@ -371,7 +391,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProviderConnection"
     patch:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: Update a provider connection
       operationId: updateProviderConnection
       parameters:
@@ -392,7 +412,7 @@ paths:
 
   /api/v1/provider-connections/{providerId}/test:
     post:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: Test a provider connection
       operationId: testProviderConnection
       parameters:
@@ -407,10 +427,11 @@ paths:
 
   /api/v1/provider-connections/{providerId}/schema:
     get:
-      tags: [Provider Connections]
+      tags: [ Provider Connections ]
       summary: Get provider schema metadata
       operationId: getProviderSchema
-      description: Available to any authenticated user. Returns student-data schema when the connection type is student_data.
+      description: Available to any authenticated user. Returns student-data schema
+        when the connection type is student_data.
       parameters:
         - $ref: "#/components/parameters/ProviderId"
       responses:
@@ -423,13 +444,13 @@ paths:
 
   /api/v1/auth/login:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Login through the enabled auth connector module
       operationId: loginThroughAuthModule
       security: []
       description: >
-        Delegates to the currently enabled auth connector module. providerProfile
-        is forwarded to the connector when supported.
+        Delegates to the currently enabled auth connector module.
+        providerProfile is forwarded to the connector when supported.
       requestBody:
         required: true
         content:
@@ -446,7 +467,7 @@ paths:
 
   /api/v1/auth/introspect:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Introspect a token through the enabled auth connector module
       operationId: introspectThroughAuthModule
       security: []
@@ -456,7 +477,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token]
+              required: [ token ]
               properties:
                 token:
                   type: string
@@ -470,10 +491,11 @@ paths:
 
   /api/v1/student-data/students:
     get:
-      tags: [Student Data]
+      tags: [ Student Data ]
       summary: Search students through the enabled student-data connector module
       operationId: searchStudentsThroughModule
-      description: Requires coordinator, admin, or faculty_supervisor role. Returns an empty array when query is omitted.
+      description: Requires coordinator, admin, or faculty_supervisor role. Returns an
+        empty array when query is omitted.
       parameters:
         - in: query
           name: query
@@ -491,8 +513,9 @@ paths:
 
   /api/v1/student-data/students/{studentRef}/academic-profile:
     get:
-      tags: [Student Data]
-      summary: Get normalized academic profile through the enabled student-data connector module
+      tags: [ Student Data ]
+      summary: Get normalized academic profile through the enabled student-data
+        connector module
       operationId: getStudentAcademicProfileThroughModule
       parameters:
         - $ref: "#/components/parameters/StudentRef"
@@ -506,7 +529,7 @@ paths:
 
   /api/v1/student-data/schema:
     get:
-      tags: [Student Data]
+      tags: [ Student Data ]
       summary: Get schema metadata from the enabled student-data connector module
       operationId: getStudentDataSchemaThroughModule
       responses:
@@ -519,7 +542,7 @@ paths:
 
   /api/v1/me:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Get current user context
       operationId: getCurrentUser
       responses:
@@ -532,10 +555,11 @@ paths:
 
   /api/v1/me/profile:
     get:
-      tags: [Student Profile]
+      tags: [ Student Profile ]
       summary: Get current student's generated profile
       operationId: getMyStudentProfile
-      description: Requires the authenticated user to have a studentRef. Returns 403 otherwise.
+      description: Requires the authenticated user to have a studentRef. Returns 403
+        otherwise.
       responses:
         "200":
           description: Student profile
@@ -548,10 +572,11 @@ paths:
 
   /api/v1/me/profile/refresh:
     post:
-      tags: [Student Profile]
+      tags: [ Student Profile ]
       summary: Refresh current student's profile from external student-data provider
       operationId: refreshMyStudentProfile
-      description: Requires the authenticated user to have a studentRef. Returns 403 otherwise.
+      description: Requires the authenticated user to have a studentRef. Returns 403
+        otherwise.
       responses:
         "200":
           description: Refreshed student profile
@@ -564,10 +589,10 @@ paths:
 
   /api/v1/me/applications:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: List current student's project applications
       operationId: getMyApplications
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Student applications
@@ -580,38 +605,38 @@ paths:
 
   /api/v1/me/assignments:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: List current student's assignments
       operationId: getMyAssignments
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Student assignments with embedded project
 
   /api/v1/me/hour-logs:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: List current student's hour logs
       operationId: getMyHourLogs
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Hour logs for student assignments
     post:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Create hour log for active assignment
       operationId: createMyHourLog
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "201":
           description: Hour log created
 
   /api/v1/me/evidence:
     post:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Upload evidence file for hour logs
       operationId: uploadMyEvidence
-      x-roles: [student]
+      x-roles: [ student ]
       requestBody:
         required: true
         content:
@@ -628,20 +653,20 @@ paths:
 
   /api/v1/me/document-requirements:
     get:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: List applicable document requirements with upload status
       operationId: getMyDocumentRequirements
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Document requirement matrix
 
   /api/v1/me/document-requirements/{requirementId}/upload:
     post:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: Upload document for a requirement
       operationId: uploadMyDocument
-      x-roles: [student]
+      x-roles: [ student ]
       parameters:
         - in: path
           name: requirementId
@@ -665,30 +690,30 @@ paths:
 
   /api/v1/me/document-uploads:
     get:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: List current student's document uploads
       operationId: getMyDocumentUploads
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Document uploads
 
   /api/v1/me/notifications:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Student notification inbox
       operationId: getMyNotifications
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Notifications
 
   /api/v1/me/notifications/{id}/read:
     patch:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Mark notification as read
       operationId: markMyNotificationRead
-      x-roles: [student]
+      x-roles: [ student ]
       parameters:
         - in: path
           name: id
@@ -702,17 +727,17 @@ paths:
 
   /api/v1/me/social-services/history:
     get:
-      tags: [Current User]
+      tags: [ Current User ]
       summary: Completed social service participations
       operationId: getMySocialServicesHistory
-      x-roles: [student]
+      x-roles: [ student ]
       responses:
         "200":
           description: Social service history
 
   /api/v1/rules:
     get:
-      tags: [Rules]
+      tags: [ Rules ]
       summary: List requirement rules
       operationId: listRules
       description: Returns only active rules, optionally filtered by scope query parameters.
@@ -739,7 +764,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/RequirementRule"
     post:
-      tags: [Rules]
+      tags: [ Rules ]
       summary: Create a requirement rule
       operationId: createRule
       description: Requires admin or coordinator role.
@@ -759,7 +784,7 @@ paths:
 
   /api/v1/rules/evaluate:
     post:
-      tags: [Rules]
+      tags: [ Rules ]
       summary: Evaluate student eligibility and requirements
       operationId: evaluateRules
       requestBody:
@@ -778,10 +803,12 @@ paths:
 
   /api/v1/projects:
     get:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: List projects
       operationId: listProjects
-      description: Students only see projects with status published, accepting_applications, or in_execution unless they also hold admin or coordinator role.
+      description: Students only see projects with status published,
+        accepting_applications, or in_execution unless they also hold admin or
+        coordinator role.
       parameters:
         - in: query
           name: status
@@ -805,7 +832,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/Project"
     post:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: Create a college-owned project
       operationId: createProject
       requestBody:
@@ -824,7 +851,7 @@ paths:
 
   /api/v1/projects/{projectId}:
     get:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: Get a project
       operationId: getProject
       parameters:
@@ -837,10 +864,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Project"
     patch:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: Update a project
       operationId: updateProject
-      description: Requires coordinator or admin role. All fields are optional; only provided fields are updated.
+      description: Requires coordinator or admin role. All fields are optional; only
+        provided fields are updated.
       parameters:
         - $ref: "#/components/parameters/ProjectId"
       requestBody:
@@ -859,10 +887,11 @@ paths:
 
   /api/v1/projects/{projectId}/publish:
     post:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: Publish a project
       operationId: publishProject
-      description: Sets project status to accepting_applications. Fails with 400 if the project is archived.
+      description: Sets project status to accepting_applications. Fails with 400 if
+        the project is archived.
       parameters:
         - $ref: "#/components/parameters/ProjectId"
       responses:
@@ -875,7 +904,7 @@ paths:
 
   /api/v1/projects/{projectId}/archive:
     post:
-      tags: [Projects]
+      tags: [ Projects ]
       summary: Archive a project
       operationId: archiveProject
       parameters:
@@ -890,7 +919,7 @@ paths:
 
   /api/v1/imports/firecrawl/runs:
     post:
-      tags: [Imports]
+      tags: [ Imports ]
       summary: Start a Firecrawl import run
       operationId: createFirecrawlImportRun
       requestBody:
@@ -909,7 +938,7 @@ paths:
 
   /api/v1/imports/firecrawl/results:
     get:
-      tags: [Imports]
+      tags: [ Imports ]
       summary: List Firecrawl import results
       operationId: listFirecrawlResults
       parameters:
@@ -929,7 +958,7 @@ paths:
 
   /api/v1/imports/firecrawl/results/{importResultId}/approve:
     post:
-      tags: [Imports]
+      tags: [ Imports ]
       summary: Approve an imported project result
       operationId: approveFirecrawlResult
       parameters:
@@ -944,7 +973,7 @@ paths:
 
   /api/v1/imports/firecrawl/results/{importResultId}/reject:
     post:
-      tags: [Imports]
+      tags: [ Imports ]
       summary: Reject an imported project result
       operationId: rejectFirecrawlResult
       parameters:
@@ -959,10 +988,12 @@ paths:
 
   /api/v1/projects/{projectId}/applications:
     post:
-      tags: [Applications]
+      tags: [ Applications ]
       summary: Apply to a project
       operationId: createApplication
-      description: Requires student role. Project must have status published or accepting_applications. studentRef defaults to the authenticated user's studentRef when omitted.
+      description: Requires student role. Project must have status published or
+        accepting_applications. studentRef defaults to the authenticated user's
+        studentRef when omitted.
       parameters:
         - $ref: "#/components/parameters/ProjectId"
       requestBody:
@@ -981,10 +1012,11 @@ paths:
 
   /api/v1/applications:
     get:
-      tags: [Applications]
+      tags: [ Applications ]
       summary: List applications
       operationId: listApplications
-      description: Students only see their own applications unless they also hold admin or coordinator role.
+      description: Students only see their own applications unless they also hold
+        admin or coordinator role.
       parameters:
         - in: query
           name: status
@@ -1006,7 +1038,7 @@ paths:
 
   /api/v1/applications/{applicationId}/approve:
     post:
-      tags: [Applications]
+      tags: [ Applications ]
       summary: Approve an application
       operationId: approveApplication
       parameters:
@@ -1021,7 +1053,7 @@ paths:
 
   /api/v1/applications/{applicationId}/reject:
     post:
-      tags: [Applications]
+      tags: [ Applications ]
       summary: Reject an application
       operationId: rejectApplication
       parameters:
@@ -1045,10 +1077,11 @@ paths:
 
   /api/v1/assignments:
     get:
-      tags: [Assignments]
+      tags: [ Assignments ]
       summary: List assignments
       operationId: listAssignments
-      description: Students only see their own assignments unless they also hold admin, coordinator, or faculty_supervisor role.
+      description: Students only see their own assignments unless they also hold
+        admin, coordinator, or faculty_supervisor role.
       parameters:
         - in: query
           name: studentRef
@@ -1071,7 +1104,7 @@ paths:
 
   /api/v1/assignments/{assignmentId}/supervisor:
     put:
-      tags: [Assignments]
+      tags: [ Assignments ]
       summary: Assign or replace supervisor
       operationId: setAssignmentSupervisor
       description: Any authenticated user may update the supervisor reference.
@@ -1083,7 +1116,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [supervisorRef]
+              required: [ supervisorRef ]
               properties:
                 supervisorRef:
                   type: string
@@ -1097,7 +1130,7 @@ paths:
 
   /api/v1/hour-logs:
     get:
-      tags: [Hour Logs]
+      tags: [ Hour Logs ]
       summary: List hour logs
       operationId: listHourLogs
       parameters:
@@ -1120,10 +1153,11 @@ paths:
                 items:
                   $ref: "#/components/schemas/HourLog"
     post:
-      tags: [Hour Logs]
+      tags: [ Hour Logs ]
       summary: Submit an hour log
       operationId: createHourLog
-      description: Requires student role. The assignment must belong to the authenticated student.
+      description: Requires student role. The assignment must belong to the
+        authenticated student.
       requestBody:
         required: true
         content:
@@ -1140,7 +1174,7 @@ paths:
 
   /api/v1/hour-logs/{hourLogId}/approve:
     post:
-      tags: [Hour Logs]
+      tags: [ Hour Logs ]
       summary: Approve an hour log
       operationId: approveHourLog
       parameters:
@@ -1155,7 +1189,7 @@ paths:
 
   /api/v1/hour-logs/{hourLogId}/reject:
     post:
-      tags: [Hour Logs]
+      tags: [ Hour Logs ]
       summary: Reject an hour log
       operationId: rejectHourLog
       parameters:
@@ -1166,7 +1200,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required: [ reason ]
               properties:
                 reason:
                   type: string
@@ -1180,7 +1214,7 @@ paths:
 
   /api/v1/document-requirements:
     get:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: List configured document requirements
       operationId: listDocumentRequirements
       responses:
@@ -1193,7 +1227,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/DocumentRequirement"
     post:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: Create a document requirement
       operationId: createDocumentRequirement
       requestBody:
@@ -1212,7 +1246,7 @@ paths:
 
   /api/v1/documents:
     get:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: List uploaded documents
       operationId: listDocuments
       parameters:
@@ -1235,7 +1269,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/DocumentUpload"
     post:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: Register a document upload
       operationId: createDocumentUpload
       requestBody:
@@ -1254,7 +1288,7 @@ paths:
 
   /api/v1/documents/{documentId}/approve:
     post:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: Approve an uploaded document
       operationId: approveDocument
       parameters:
@@ -1269,7 +1303,7 @@ paths:
 
   /api/v1/documents/{documentId}/reject:
     post:
-      tags: [Documents]
+      tags: [ Documents ]
       summary: Reject an uploaded document
       operationId: rejectDocument
       parameters:
@@ -1280,7 +1314,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required: [ reason ]
               properties:
                 reason:
                   type: string
@@ -1294,17 +1328,18 @@ paths:
 
   /api/v1/certificates/generate:
     post:
-      tags: [Certificates]
+      tags: [ Certificates ]
       summary: Generate a social-hours completion certificate
       operationId: generateCertificate
-      description: Requires coordinator or admin role. Returns 400 when the student is ineligible or has insufficient approved hours.
+      description: Requires coordinator or admin role. Returns 400 when the student is
+        ineligible or has insufficient approved hours.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [studentRef]
+              required: [ studentRef ]
               properties:
                 studentRef:
                   type: string
@@ -1323,10 +1358,11 @@ paths:
 
   /api/v1/reports/progress:
     get:
-      tags: [Reports]
+      tags: [ Reports ]
       summary: Get progress report
       operationId: getProgressReport
-      description: Requires coordinator, admin, or auditor role. Returns platform-wide aggregate metrics.
+      description: Requires coordinator, admin, or auditor role. Returns platform-wide
+        aggregate metrics.
       responses:
         "200":
           description: Progress report
@@ -1337,7 +1373,7 @@ paths:
 
   /api/v1/reports/projects:
     get:
-      tags: [Reports]
+      tags: [ Reports ]
       summary: Get project report
       operationId: getProjectReport
       description: Requires coordinator, admin, or auditor role.
@@ -1351,7 +1387,7 @@ paths:
 
   /api/v1/audit-log:
     get:
-      tags: [Audit]
+      tags: [ Audit ]
       summary: List audit events
       operationId: listAuditEvents
       description: Requires admin or auditor role. Returns at most 100 events, newest first.
@@ -1376,7 +1412,7 @@ paths:
 
   /api/v1/webhooks/student-data/updated:
     post:
-      tags: [Webhooks]
+      tags: [ Webhooks ]
       summary: Receive student-data update notification
       operationId: receiveStudentDataUpdatedWebhook
       security:
@@ -1397,7 +1433,7 @@ paths:
 
   /api/v1/webhooks/notifications/status:
     post:
-      tags: [Webhooks]
+      tags: [ Webhooks ]
       summary: Receive notification delivery status
       operationId: receiveNotificationStatusWebhook
       security:
@@ -1418,7 +1454,7 @@ paths:
 
   /api/v1/webhooks/workflows/project-posted:
     post:
-      tags: [Webhooks]
+      tags: [ Webhooks ]
       summary: Receive workflow result for project posting
       operationId: receiveProjectPostedWebhook
       security:
@@ -1439,7 +1475,7 @@ paths:
 
   /api/v1/webhooks/scraper/crawl-completed:
     post:
-      tags: [Webhooks]
+      tags: [ Webhooks ]
       summary: Receive scraper crawl completion event
       operationId: receiveCrawlCompletedWebhook
       security:
@@ -1460,7 +1496,7 @@ paths:
 
   /demo-auth/.well-known/openid-configuration:
     get:
-      tags: [Demo Auth Provider]
+      tags: [ Demo Auth Provider ]
       summary: Get dummy auth provider metadata
       operationId: getDemoAuthConfiguration
       security: []
@@ -1471,7 +1507,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [issuer, token_endpoint, userinfo_endpoint, introspection_endpoint]
+                required: [ issuer, token_endpoint, userinfo_endpoint, introspection_endpoint ]
                 properties:
                   issuer:
                     type: string
@@ -1488,7 +1524,7 @@ paths:
 
   /demo-auth/oauth/token:
     post:
-      tags: [Demo Auth Provider]
+      tags: [ Demo Auth Provider ]
       summary: Issue a dummy access token
       operationId: issueDemoAuthToken
       security: []
@@ -1498,11 +1534,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [grantType, username, password]
+              required: [ grantType, username, password ]
               properties:
                 grantType:
                   type: string
-                  enum: [password]
+                  enum: [ password ]
                 username:
                   type: string
                 password:
@@ -1518,7 +1554,7 @@ paths:
 
   /demo-auth/oauth/introspect:
     post:
-      tags: [Demo Auth Provider]
+      tags: [ Demo Auth Provider ]
       summary: Introspect a dummy token
       operationId: introspectDemoAuthToken
       security: []
@@ -1528,7 +1564,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token]
+              required: [ token ]
               properties:
                 token:
                   type: string
@@ -1542,7 +1578,7 @@ paths:
 
   /demo-auth/userinfo:
     get:
-      tags: [Demo Auth Provider]
+      tags: [ Demo Auth Provider ]
       summary: Get dummy user information
       operationId: getDemoUserInfo
       security:
@@ -1557,7 +1593,7 @@ paths:
 
   /demo-auth/users:
     get:
-      tags: [Demo Auth Provider]
+      tags: [ Demo Auth Provider ]
       summary: List dummy users
       operationId: listDemoUsers
       security: []
@@ -1578,7 +1614,7 @@ paths:
 
   /demo-student-data/schema:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: Get dummy student-data provider schema
       operationId: getDemoStudentDataSchema
       security: []
@@ -1597,7 +1633,7 @@ paths:
 
   /demo-student-data/students:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: Search dummy students
       operationId: searchDemoStudents
       security: []
@@ -1622,7 +1658,7 @@ paths:
 
   /demo-student-data/students/{externalStudentId}:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: Get dummy student by external ID
       operationId: getDemoStudent
       security: []
@@ -1642,7 +1678,7 @@ paths:
 
   /demo-student-data/students/{externalStudentId}/academic-profile:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: Get normalized academic profile from dummy provider
       operationId: getDemoAcademicProfile
       security: []
@@ -1662,7 +1698,7 @@ paths:
 
   /demo-student-data/students/{externalStudentId}/program-progress:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: Get dummy program progress
       operationId: getDemoProgramProgress
       security: []
@@ -1682,7 +1718,7 @@ paths:
 
   /demo-student-data/programs:
     get:
-      tags: [Demo Student Data Provider]
+      tags: [ Demo Student Data Provider ]
       summary: List dummy academic programs
       operationId: listDemoPrograms
       security: []
@@ -1695,6 +1731,113 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AcademicProgram"
+  /api/v1/admin-users:
+    get:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (GET /api/v1/admin-users)
+      operationId: getApiV1Admin-users
+      responses:
+        "200":
+          description: Success
+    post:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (POST /api/v1/admin-users)
+      operationId: postApiV1Admin-users
+      responses:
+        "200":
+          description: Success
+  /api/v1/admin-users/{adminUserId}:
+    delete:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (DELETE
+        /api/v1/admin-users/{adminUserId})
+      operationId: deleteApiV1Admin-usersAdminuserid
+      responses:
+        "200":
+          description: Success
+    get:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (GET /api/v1/admin-users/{adminUserId})
+      operationId: getApiV1Admin-usersAdminuserid
+      responses:
+        "200":
+          description: Success
+    patch:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (PATCH
+        /api/v1/admin-users/{adminUserId})
+      operationId: patchApiV1Admin-usersAdminuserid
+      responses:
+        "200":
+          description: Success
+  /api/v1/assignments/{assignmentId}/complete:
+    post:
+      tags:
+        - Assignments
+      summary: Auto-generated from Express route (POST
+        /api/v1/assignments/{assignmentId}/complete)
+      operationId: postApiV1AssignmentsAssignmentidComplete
+      responses:
+        "200":
+          description: Success
+  /api/v1/config/instance:
+    get:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (GET /api/v1/config/instance)
+      operationId: getApiV1ConfigInstance
+      responses:
+        "200":
+          description: Success
+    put:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (PUT /api/v1/config/instance)
+      operationId: putApiV1ConfigInstance
+      responses:
+        "200":
+          description: Success
+  /api/v1/config/smtp:
+    get:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (GET /api/v1/config/smtp)
+      operationId: getApiV1ConfigSmtp
+      responses:
+        "200":
+          description: Success
+    put:
+      tags:
+        - Modules
+      summary: Auto-generated from Express route (PUT /api/v1/config/smtp)
+      operationId: putApiV1ConfigSmtp
+      responses:
+        "200":
+          description: Success
+  /api/v1/document-requirements/{id}:
+    delete:
+      tags:
+        - Health
+      summary: Auto-generated from Express route (DELETE
+        /api/v1/document-requirements/{id})
+      operationId: deleteApiV1Document-requirementsId
+      responses:
+        "200":
+          description: Success
+    patch:
+      tags:
+        - Health
+      summary: Auto-generated from Express route (PATCH
+        /api/v1/document-requirements/{id})
+      operationId: patchApiV1Document-requirementsId
+      responses:
+        "200":
+          description: Success
 
 components:
   securitySchemes:
@@ -1784,18 +1927,18 @@ components:
   schemas:
     HealthStatus:
       type: object
-      required: [status, checkedAt]
+      required: [ status, checkedAt ]
       properties:
         status:
           type: string
-          enum: [ok, degraded, down]
+          enum: [ ok, degraded, down ]
         checkedAt:
           type: string
           format: date-time
 
     ModuleCapability:
       type: object
-      required: [key, enabled]
+      required: [ key, enabled ]
       properties:
         key:
           type: string
@@ -1818,15 +1961,15 @@ components:
 
     ModuleStatus:
       type: string
-      enum: [installed, enabled, disabled, misconfigured, failing]
+      enum: [ installed, enabled, disabled, misconfigured, failing ]
 
     ModuleManifest:
       type: object
-      required: [moduleKey, displayName, version, moduleType, capabilities]
+      required: [ moduleKey, displayName, version, moduleType, capabilities ]
       properties:
         moduleKey:
           type: string
-          examples: [dummy-auth-connector, dummy-student-data-connector]
+          examples: [ dummy-auth-connector, dummy-student-data-connector ]
         displayName:
           type: string
         version:
@@ -1858,8 +2001,8 @@ components:
           items:
             type: string
           examples:
-            - [auth.v1]
-            - [student_data.v1]
+            - [ auth.v1 ]
+            - [ student_data.v1 ]
         requiredContracts:
           type: array
           items:
@@ -1886,7 +2029,7 @@ components:
 
     ModuleFeatureDefinition:
       type: object
-      required: [key, name, default]
+      required: [ key, name, default ]
       properties:
         key:
           type: string
@@ -1903,7 +2046,7 @@ components:
 
     AvailableModule:
       type: object
-      required: [moduleKey, displayName, version, moduleType, installed, capabilities]
+      required: [ moduleKey, displayName, version, moduleType, installed, capabilities ]
       properties:
         moduleKey:
           type: string
@@ -1936,7 +2079,7 @@ components:
 
     ModuleFeature:
       type: object
-      required: [featureKey, name, enabled]
+      required: [ featureKey, name, enabled ]
       properties:
         featureKey:
           type: string
@@ -1953,13 +2096,13 @@ components:
 
     ModuleFeaturesInput:
       type: object
-      required: [features]
+      required: [ features ]
       properties:
         features:
           type: array
           items:
             type: object
-            required: [featureKey, enabled]
+            required: [ featureKey, enabled ]
             properties:
               featureKey:
                 type: string
@@ -1968,7 +2111,7 @@ components:
 
     InstalledModule:
       type: object
-      required: [moduleKey, displayName, version, moduleType, status, enabled]
+      required: [ moduleKey, displayName, version, moduleType, status, enabled ]
       properties:
         moduleKey:
           type: string
@@ -1982,7 +2125,7 @@ components:
           $ref: "#/components/schemas/ModuleStatus"
         installState:
           type: string
-          enum: [available, installed, uninstalled]
+          enum: [ available, installed, uninstalled ]
         enabled:
           type: boolean
         dependencies:
@@ -2008,7 +2151,7 @@ components:
 
     ModuleConfig:
       type: object
-      required: [moduleKey, configured]
+      required: [ moduleKey, configured ]
       properties:
         moduleKey:
           type: string
@@ -2041,16 +2184,16 @@ components:
 
     ModuleTestResult:
       type: object
-      required: [moduleKey, status, checkedAt]
+      required: [ moduleKey, status, checkedAt ]
       properties:
         moduleKey:
           type: string
         status:
           type: string
-          enum: [success, failure]
+          enum: [ success, failure ]
         contract:
           type: string
-          examples: [auth.v1, student_data.v1]
+          examples: [ auth.v1, student_data.v1 ]
         message:
           type: string
         details:
@@ -2062,13 +2205,13 @@ components:
 
     ModuleHealth:
       type: object
-      required: [moduleKey, status, checkedAt]
+      required: [ moduleKey, status, checkedAt ]
       properties:
         moduleKey:
           type: string
         status:
           type: string
-          enum: [ok, degraded, down, unknown]
+          enum: [ ok, degraded, down, unknown ]
         message:
           type: string
         checkedAt:
@@ -2077,7 +2220,7 @@ components:
 
     ProviderCapability:
       type: object
-      required: [providerKey, providerType, status, capabilities]
+      required: [ providerKey, providerType, status, capabilities ]
       properties:
         moduleKey:
           type: string
@@ -2087,7 +2230,7 @@ components:
           $ref: "#/components/schemas/ProviderType"
         status:
           type: string
-          enum: [configured, connected, failing, disabled]
+          enum: [ configured, connected, failing, disabled ]
         capabilities:
           type: array
           items:
@@ -2095,21 +2238,21 @@ components:
 
     ProviderType:
       type: string
-      enum: [auth, student_data, email, workflow, scraper]
+      enum: [ auth, student_data, email, workflow, scraper ]
 
     ProviderConnection:
       type: object
-      required: [id, moduleKey, providerKey, providerType, baseUrl, enabled, createdAt]
+      required: [ id, moduleKey, providerKey, providerType, baseUrl, enabled, createdAt ]
       properties:
         id:
           type: string
           format: uuid
         moduleKey:
           type: string
-          examples: [dummy-auth-connector, dummy-student-data-connector]
+          examples: [ dummy-auth-connector, dummy-student-data-connector ]
         providerKey:
           type: string
-          examples: [dummy-auth, datamcp, zavu, n8n, firecrawl]
+          examples: [ dummy-auth, datamcp, zavu, n8n, firecrawl ]
         providerType:
           $ref: "#/components/schemas/ProviderType"
         baseUrl:
@@ -2119,7 +2262,7 @@ components:
           type: boolean
         authMethod:
           type: string
-          enum: [none, bearer_token, api_key, oauth2, signed_webhook]
+          enum: [ none, bearer_token, api_key, oauth2, signed_webhook ]
         capabilities:
           type: array
           items:
@@ -2129,7 +2272,7 @@ components:
           additionalProperties: true
         lastHealthStatus:
           type: string
-          enum: [unknown, ok, degraded, down]
+          enum: [ unknown, ok, degraded, down ]
         createdAt:
           type: string
           format: date-time
@@ -2139,7 +2282,7 @@ components:
 
     CreateProviderConnectionRequest:
       type: object
-      required: [moduleKey, providerKey, providerType, baseUrl, authMethod]
+      required: [ moduleKey, providerKey, providerType, baseUrl, authMethod ]
       properties:
         moduleKey:
           type: string
@@ -2152,7 +2295,7 @@ components:
           format: uri
         authMethod:
           type: string
-          enum: [none, bearer_token, api_key, oauth2, signed_webhook]
+          enum: [ none, bearer_token, api_key, oauth2, signed_webhook ]
         secret:
           type: string
           writeOnly: true
@@ -2177,11 +2320,11 @@ components:
 
     ProviderTestResult:
       type: object
-      required: [status, checkedAt]
+      required: [ status, checkedAt ]
       properties:
         status:
           type: string
-          enum: [success, failure]
+          enum: [ success, failure ]
         message:
           type: string
         checkedAt:
@@ -2190,7 +2333,7 @@ components:
 
     ProviderSchema:
       type: object
-      required: [providerKey, fields]
+      required: [ providerKey, fields ]
       properties:
         providerKey:
           type: string
@@ -2200,7 +2343,7 @@ components:
           type: array
           items:
             type: object
-            required: [path, type]
+            required: [ path, type ]
             properties:
               path:
                 type: string
@@ -2213,7 +2356,7 @@ components:
 
     AuthLoginRequest:
       type: object
-      required: [username, password]
+      required: [ username, password ]
       properties:
         username:
           type: string
@@ -2226,32 +2369,32 @@ components:
 
     AuthTokenResponse:
       type: object
-      required: [accessToken, tokenType, expiresIn, issuedByModule]
+      required: [ accessToken, tokenType, expiresIn, issuedByModule ]
       properties:
         accessToken:
           type: string
         tokenType:
           type: string
-          enum: [Bearer]
+          enum: [ Bearer ]
         expiresIn:
           type: integer
         refreshToken:
           type: string
         issuedByModule:
           type: string
-          examples: [dummy-auth-connector]
+          examples: [ dummy-auth-connector ]
         user:
           $ref: "#/components/schemas/CurrentUser"
 
     AuthIntrospectionResult:
       type: object
-      required: [active, checkedByModule]
+      required: [ active, checkedByModule ]
       properties:
         active:
           type: boolean
         checkedByModule:
           type: string
-          examples: [dummy-auth-connector]
+          examples: [ dummy-auth-connector ]
         externalUserId:
           type: string
         roles:
@@ -2264,7 +2407,7 @@ components:
 
     StudentSearchResult:
       type: object
-      required: [studentRef, externalStudentId, displayName, resolvedByModule]
+      required: [ studentRef, externalStudentId, displayName, resolvedByModule ]
       properties:
         studentRef:
           type: string
@@ -2281,11 +2424,11 @@ components:
           type: string
         resolvedByModule:
           type: string
-          examples: [dummy-student-data-connector]
+          examples: [ dummy-student-data-connector ]
 
     CurrentUser:
       type: object
-      required: [externalUserId, providerKey, roles]
+      required: [ externalUserId, providerKey, roles ]
       properties:
         externalUserId:
           type: string
@@ -2307,11 +2450,19 @@ components:
 
     UserRole:
       type: string
-      enum: [student, coordinator, faculty_supervisor, external_supervisor, admin, auditor]
+      enum:
+        [
+          student,
+          coordinator,
+          faculty_supervisor,
+          external_supervisor,
+          admin,
+          auditor
+        ]
 
     AcademicProfile:
       type: object
-      required: [studentRef, externalStudentId, programCode, programName, academicStatus]
+      required: [ studentRef, externalStudentId, programCode, programName, academicStatus ]
       properties:
         studentRef:
           type: string
@@ -2332,15 +2483,25 @@ components:
           type: string
         degreeLevel:
           type: string
-          enum: [technical, teaching, bachelor, engineering, architecture, master, doctorate, other]
+          enum:
+            [
+              technical,
+              teaching,
+              bachelor,
+              engineering,
+              architecture,
+              master,
+              doctorate,
+              other
+            ]
         modality:
           type: string
-          enum: [onsite, online, hybrid, other]
+          enum: [ onsite, online, hybrid, other ]
         cohort:
           type: string
         academicStatus:
           type: string
-          enum: [active, egresado, graduate_candidate, inactive, unknown]
+          enum: [ active, egresado, graduate_candidate, inactive, unknown ]
         approvedCredits:
           type: number
         totalCredits:
@@ -2369,7 +2530,7 @@ components:
 
     StudentProfile:
       type: object
-      required: [studentRef, academicProfile, eligibility]
+      required: [ studentRef, academicProfile, eligibility ]
       properties:
         studentRef:
           type: string
@@ -2394,7 +2555,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/RequirementRuleInput"
         - type: object
-          required: [id, createdAt]
+          required: [ id, createdAt ]
           properties:
             id:
               type: string
@@ -2405,7 +2566,7 @@ components:
 
     RequirementRuleInput:
       type: object
-      required: [name, requiredHours]
+      required: [ name, requiredHours ]
       properties:
         name:
           type: string
@@ -2444,14 +2605,14 @@ components:
               type: integer
             unit:
               type: string
-              enum: [days, weeks, months, years]
+              enum: [ days, weeks, months, years ]
         active:
           type: boolean
           default: true
 
     RuleEvaluationRequest:
       type: object
-      required: [studentRef]
+      required: [ studentRef ]
       properties:
         studentRef:
           type: string
@@ -2463,11 +2624,11 @@ components:
 
     RuleEvaluationResult:
       type: object
-      required: [status, requiredHours, matchedRuleIds]
+      required: [ status, requiredHours, matchedRuleIds ]
       properties:
         status:
           type: string
-          enum: [eligible, not_eligible, manual_review, missing_data]
+          enum: [ eligible, not_eligible, manual_review, missing_data ]
         requiredHours:
           type: number
         requiredCategoryHours:
@@ -2494,7 +2655,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/ProjectInput"
         - type: object
-          required: [id, status, sourceType, createdAt]
+          required: [ id, status, sourceType, createdAt ]
           properties:
             id:
               type: string
@@ -2517,7 +2678,7 @@ components:
 
     ProjectInput:
       type: object
-      required: [title, description, organizationName, categories]
+      required: [ title, description, organizationName, categories ]
       properties:
         title:
           type: string
@@ -2529,7 +2690,7 @@ components:
           type: string
         modality:
           type: string
-          enum: [onsite, remote, hybrid]
+          enum: [ onsite, remote, hybrid ]
         categories:
           type: array
           items:
@@ -2563,7 +2724,7 @@ components:
           type: string
         modality:
           type: string
-          enum: [onsite, remote, hybrid]
+          enum: [ onsite, remote, hybrid ]
         categories:
           type: array
           items:
@@ -2584,15 +2745,27 @@ components:
 
     ProjectStatus:
       type: string
-      enum: [draft, pending_review, published, accepting_applications, in_execution, closed, archived, rejected, cancelled, suspended]
+      enum:
+        [
+          draft,
+          pending_review,
+          published,
+          accepting_applications,
+          in_execution,
+          closed,
+          archived,
+          rejected,
+          cancelled,
+          suspended
+        ]
 
     ProjectSourceType:
       type: string
-      enum: [college_created, scraped]
+      enum: [ college_created, scraped ]
 
     FirecrawlRunRequest:
       type: object
-      required: [startUrls]
+      required: [ startUrls ]
       properties:
         startUrls:
           type: array
@@ -2607,21 +2780,21 @@ components:
 
     ImportRun:
       type: object
-      required: [id, status, createdAt]
+      required: [ id, status, createdAt ]
       properties:
         id:
           type: string
           format: uuid
         status:
           type: string
-          enum: [queued, running, completed, failed]
+          enum: [ queued, running, completed, failed ]
         createdAt:
           type: string
           format: date-time
 
     ImportResult:
       type: object
-      required: [id, status, sourceUrl, extractedProject]
+      required: [ id, status, sourceUrl, extractedProject ]
       properties:
         id:
           type: string
@@ -2643,7 +2816,7 @@ components:
 
     ImportResultStatus:
       type: string
-      enum: [pending_review, approved, rejected, duplicate]
+      enum: [ pending_review, approved, rejected, duplicate ]
 
     ApplicationInput:
       type: object
@@ -2655,7 +2828,7 @@ components:
 
     ProjectApplication:
       type: object
-      required: [id, projectId, studentRef, status, createdAt]
+      required: [ id, projectId, studentRef, status, createdAt ]
       properties:
         id:
           type: string
@@ -2677,11 +2850,11 @@ components:
 
     ApplicationStatus:
       type: string
-      enum: [submitted, approved, rejected, cancelled, waitlisted]
+      enum: [ submitted, approved, rejected, cancelled, waitlisted ]
 
     Assignment:
       type: object
-      required: [id, projectId, studentRef, status]
+      required: [ id, projectId, studentRef, status ]
       properties:
         id:
           type: string
@@ -2695,11 +2868,11 @@ components:
           type: string
         status:
           type: string
-          enum: [active, completed, cancelled, suspended]
+          enum: [ active, completed, cancelled, suspended ]
 
     HourLogInput:
       type: object
-      required: [assignmentId, date, durationHours, category, description]
+      required: [ assignmentId, date, durationHours, category, description ]
       properties:
         assignmentId:
           type: string
@@ -2715,7 +2888,7 @@ components:
           type: number
         category:
           type: string
-          enum: [disciplinary, environmental, community, research, administrative, other]
+          enum: [ disciplinary, environmental, community, research, administrative, other ]
         description:
           type: string
         evidenceIds:
@@ -2728,7 +2901,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/HourLogInput"
         - type: object
-          required: [id, status, createdAt]
+          required: [ id, status, createdAt ]
           properties:
             id:
               type: string
@@ -2743,11 +2916,11 @@ components:
 
     ApprovalStatus:
       type: string
-      enum: [pending, approved, rejected]
+      enum: [ pending, approved, rejected ]
 
     DocumentRequirementInput:
       type: object
-      required: [key, label, required, allowedFileTypes]
+      required: [ key, label, required, allowedFileTypes ]
       properties:
         key:
           type: string
@@ -2779,7 +2952,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/DocumentRequirementInput"
         - type: object
-          required: [id]
+          required: [ id ]
           properties:
             id:
               type: string
@@ -2787,7 +2960,7 @@ components:
 
     DocumentUploadInput:
       type: object
-      required: [documentRequirementId, ownerRef, fileName, storageRef]
+      required: [ documentRequirementId, ownerRef, fileName, storageRef ]
       properties:
         documentRequirementId:
           type: string
@@ -2807,7 +2980,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/DocumentUploadInput"
         - type: object
-          required: [id, status, uploadedAt]
+          required: [ id, status, uploadedAt ]
           properties:
             id:
               type: string
@@ -2822,7 +2995,7 @@ components:
 
     Certificate:
       type: object
-      required: [id, studentRef, status, generatedAt]
+      required: [ id, studentRef, status, generatedAt ]
       properties:
         id:
           type: string
@@ -2834,7 +3007,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: [generated, revoked]
+          enum: [ generated, revoked ]
         documentId:
           type: string
           format: uuid
@@ -2876,7 +3049,7 @@ components:
 
     AuditEvent:
       type: object
-      required: [id, actorRef, action, entityType, entityId, createdAt]
+      required: [ id, actorRef, action, entityType, entityId, createdAt ]
       properties:
         id:
           type: string
@@ -2898,7 +3071,8 @@ components:
 
     StudentDataUpdatedEvent:
       type: object
-      description: Payload is not validated. Only externalStudentId is used to invalidate cached profiles.
+      description: Payload is not validated. Only externalStudentId is used to
+        invalidate cached profiles.
       properties:
         providerKey:
           type: string
@@ -2914,7 +3088,7 @@ components:
 
     WebhookAcceptedResponse:
       type: object
-      required: [accepted]
+      required: [ accepted ]
       properties:
         accepted:
           type: boolean
@@ -2922,7 +3096,8 @@ components:
 
     NotificationStatusEvent:
       type: object
-      description: Payload is not validated. Only messageId and status are used to update notification records.
+      description: Payload is not validated. Only messageId and status are used to
+        update notification records.
       properties:
         providerKey:
           type: string
@@ -2930,14 +3105,15 @@ components:
           type: string
         status:
           type: string
-          enum: [queued, sent, delivered, failed, bounced]
+          enum: [ queued, sent, delivered, failed, bounced ]
         occurredAt:
           type: string
           format: date-time
 
     ProjectPostedEvent:
       type: object
-      description: Payload is not validated. The handler acknowledges the event without processing fields.
+      description: Payload is not validated. The handler acknowledges the event
+        without processing fields.
       properties:
         providerKey:
           type: string
@@ -2946,14 +3122,15 @@ components:
           format: uuid
         status:
           type: string
-          enum: [posted, failed]
+          enum: [ posted, failed ]
         externalUrl:
           type: string
           format: uri
 
     CrawlCompletedEvent:
       type: object
-      description: Payload is not validated. The handler acknowledges the event without processing fields.
+      description: Payload is not validated. The handler acknowledges the event
+        without processing fields.
       properties:
         providerKey:
           type: string
@@ -2961,19 +3138,19 @@ components:
           type: string
         status:
           type: string
-          enum: [completed, failed]
+          enum: [ completed, failed ]
         resultCount:
           type: integer
 
     DemoTokenResponse:
       type: object
-      required: [accessToken, tokenType, expiresIn]
+      required: [ accessToken, tokenType, expiresIn ]
       properties:
         accessToken:
           type: string
         tokenType:
           type: string
-          enum: [Bearer]
+          enum: [ Bearer ]
         expiresIn:
           type: integer
         refreshToken:
@@ -2981,7 +3158,7 @@ components:
 
     DemoTokenIntrospection:
       type: object
-      required: [active]
+      required: [ active ]
       properties:
         active:
           type: boolean
@@ -2996,7 +3173,7 @@ components:
 
     DemoUserInfo:
       type: object
-      required: [sub, roles]
+      required: [ sub, roles ]
       properties:
         sub:
           type: string
@@ -3018,7 +3195,7 @@ components:
 
     DemoStudent:
       type: object
-      required: [externalStudentId, displayName]
+      required: [ externalStudentId, displayName ]
       properties:
         externalStudentId:
           type: string
@@ -3050,7 +3227,7 @@ components:
 
     AcademicProgram:
       type: object
-      required: [programCode, programName]
+      required: [ programCode, programName ]
       properties:
         facultyCode:
           type: string
