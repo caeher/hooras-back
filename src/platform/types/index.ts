@@ -14,9 +14,27 @@ export type ModuleType =
   | 'scraper_connector'
   | 'document_template'
   | 'reporting_extension'
-  | 'rules_extension';
+  | 'rules_extension'
+  | 'projects'
+  | 'applications'
+  | 'assignments'
+  | 'hours'
+  | 'documents'
+  | 'certificates'
+  | 'student_profile';
 
 export type ModuleStatus = 'installed' | 'enabled' | 'disabled' | 'misconfigured' | 'failing';
+
+export type ModuleInstallState = 'available' | 'installed' | 'uninstalled';
+
+export interface ModuleFeatureDefinition {
+  key: string;
+  name: string;
+  description?: string;
+  default: boolean;
+  /** Capability strings gated by this feature toggle */
+  capabilities?: string[];
+}
 
 export type ProviderType = 'auth' | 'student_data' | 'email' | 'workflow' | 'scraper';
 
@@ -132,6 +150,14 @@ export interface ModuleManifest {
   license?: string;
   platformVersion?: string;
   capabilities: string[];
+  /** Module keys that must be installed and enabled before this module can be enabled */
+  dependencies?: string[];
+  /** Service contracts required from other enabled modules */
+  requiredServices?: string[];
+  /** Service contracts this module provides when enabled */
+  providedServices?: string[];
+  /** Toggleable features within the module */
+  features?: ModuleFeatureDefinition[];
   providedContracts?: string[];
   requiredContracts?: string[];
   requiredSecrets?: string[];

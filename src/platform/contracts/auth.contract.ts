@@ -3,10 +3,10 @@ import {
   AuthTokenResponse,
   CurrentUser,
   ModuleHealth,
-  ModuleManifest,
   ModuleTestResult,
   UserRole,
 } from '../types';
+import { PlatformModuleInstance } from '../module/PlatformModule';
 
 export interface AuthLoginParams {
   username: string;
@@ -14,12 +14,7 @@ export interface AuthLoginParams {
   providerProfile?: string;
 }
 
-export interface AuthConnectorContract {
-  readonly manifest: ModuleManifest;
-  configure(values: Record<string, unknown>, secrets: Record<string, string>): Promise<void>;
-  testConnection(): Promise<ModuleTestResult>;
-  getCapabilities(): Promise<string[]>;
-  getHealth(): Promise<ModuleHealth>;
+export interface AuthConnectorContract extends PlatformModuleInstance {
   login(params: AuthLoginParams): Promise<AuthTokenResponse>;
   introspectToken(token: string): Promise<AuthIntrospectionResult>;
   getUserInfo(token: string): Promise<CurrentUser>;
