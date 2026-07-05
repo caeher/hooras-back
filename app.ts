@@ -7,7 +7,6 @@ import { parse as parseYaml } from 'yaml';
 import { env } from './config/env';
 import { resolveCorsOptions } from './config/cors';
 import { resolveBundledAsset } from './config/runtime';
-import { errorHandler } from './app/middleware/errorHandler';
 import { authMiddleware, optionalAuth } from './app/middleware/auth';
 import { studentWhitelist } from './app/middleware/studentWhitelist';
 
@@ -72,6 +71,5 @@ export function createApp() {
     }
   });
 
-  app.use(errorHandler);
   return app;
 }

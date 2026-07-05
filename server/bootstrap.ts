@@ -6,6 +6,8 @@ import { ModuleLoader } from '../platform/module/ModuleLoader';
 import { BUILTIN_MODULE_KEYS } from '../platform/registry/moduleCatalog';
 import { ModuleRegistry } from '../platform/registry/ModuleRegistry';
 import { SetupService } from '../core/setup/SetupService';
+import { runModuleMigrations } from '../platform/module/ModuleMigrationRunner';
+import { errorHandler } from '../app/middleware/errorHandler';
 
 const DEFAULT_MODULE_KEYS = [...BUILTIN_MODULE_KEYS] as const;
 
@@ -35,6 +37,15 @@ export async function prepareDatabaseEnvironment(
 
   if (!options.skipMigrations) {
     await db.migrate.latest();
+
+    // Ensure all installed modules have their database schemas fully migrated on startup
+    const installed = await db('installed_modules').select('module_key');
+    for (const row of installed) {
+      const descriptor = descriptors.find((d) => d.moduleKey === row.module_key);
+      if (descriptor?.getMigrations) {
+        await runModuleMigrations(descriptor.getMigrations());
+      }
+    }
   }
 
   if (env.NODE_ENV === 'test') {
@@ -60,6 +71,7 @@ export async function prepareDatabaseEnvironment(
 export function createConfiguredApp(): Express {
   const app = createApp();
   ModuleRegistry.initApp(app);
+  app.use(errorHandler);
   return app;
 }
 
