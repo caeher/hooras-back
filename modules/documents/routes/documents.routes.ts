@@ -5,7 +5,7 @@ import db from '../../../database';
 import { asyncHandler } from '../../../app/middleware/asyncHandler';
 import { validate } from '../../../app/middleware/validate';
 import { authMiddleware, rbac } from '../../../app/middleware/auth';
-import { NotFoundError } from '../../../app/utils/errors';
+import { NotFoundError, BadRequestError } from '../../../app/utils/errors';
 import { writeAuditEvent } from '../../../app/utils/audit';
 import { getService } from '../../../platform/module/ServiceRegistry';
 import { NOTIFICATIONS_V1, NotificationsServiceV1 } from '../../../platform/contracts/services';
@@ -27,6 +27,7 @@ const requirementSchema = z.object({
   maxFileSizeMb: z.number().optional(),
   requiresApproval: z.boolean().optional(),
   templateId: z.string().optional(),
+  active: z.boolean().optional(),
 });
 
 const requirementUpdateSchema = requirementSchema.partial();
@@ -64,6 +65,13 @@ router.get('/document-requirements', authMiddleware, rbac('admin', 'coordinator'
 
 router.post('/document-requirements', authMiddleware, rbac('admin', 'coordinator'), validate(requirementSchema), asyncHandler(async (req: Request, res: Response) => {
   const body = req.body;
+  const existing = await db('document_requirements')
+    .where({ key: body.key, active: true })
+    .first();
+  if (existing) {
+    throw new BadRequestError(`An active document requirement with key '${body.key}' already exists`);
+  }
+
   const [row] = await db('document_requirements')
     .insert({
       id: uuidv4(),
@@ -86,6 +94,24 @@ router.post('/document-requirements', authMiddleware, rbac('admin', 'coordinator
 
 router.patch('/document-requirements/:id', authMiddleware, rbac('admin', 'coordinator'), validate(requirementUpdateSchema), asyncHandler(async (req: Request, res: Response) => {
   const body = req.body;
+  const currentReq = await db('document_requirements')
+    .where({ id: req.params.id })
+    .first();
+  if (!currentReq) throw new NotFoundError('Document requirement not found');
+
+  const targetKey = body.key !== undefined ? body.key : currentReq.key;
+  const targetActive = body.active !== undefined ? body.active : (currentReq.active ?? true);
+
+  if (targetActive) {
+    const existing = await db('document_requirements')
+      .where({ key: targetKey, active: true })
+      .whereNot({ id: req.params.id })
+      .first();
+    if (existing) {
+      throw new BadRequestError(`An active document requirement with key '${targetKey}' already exists`);
+    }
+  }
+
   const updates: Record<string, unknown> = {};
   if (body.key !== undefined) updates.key = body.key;
   if (body.label !== undefined) updates.label = body.label;
@@ -98,22 +124,42 @@ router.patch('/document-requirements/:id', authMiddleware, rbac('admin', 'coordi
   if (body.maxFileSizeMb !== undefined) updates.max_file_size_mb = body.maxFileSizeMb;
   if (body.requiresApproval !== undefined) updates.requires_approval = body.requiresApproval;
   if (body.templateId !== undefined) updates.template_id = body.templateId;
+  if (body.active !== undefined) updates.active = body.active;
 
   const [row] = await db('document_requirements')
     .where({ id: req.params.id })
     .update(updates)
     .returning('*');
-  if (!row) throw new NotFoundError('Document requirement not found');
   res.json(mapRequirement(row));
 }));
 
 router.delete('/document-requirements/:id', authMiddleware, rbac('admin', 'coordinator'), asyncHandler(async (req: Request, res: Response) => {
-  const [row] = await db('document_requirements')
-    .where({ id: req.params.id })
-    .update({ active: false })
-    .returning('*');
-  if (!row) throw new NotFoundError('Document requirement not found');
-  res.json(mapRequirement(row));
+  const id = req.params.id;
+  const currentReq = await db('document_requirements').where({ id }).first();
+  if (!currentReq) throw new NotFoundError('Document requirement not found');
+
+  const uploadsCount = await db('document_uploads')
+    .where({ document_requirement_id: id })
+    .count({ count: '*' })
+    .first();
+  const hasUploads = parseInt(String(uploadsCount?.count ?? '0'), 10) > 0;
+
+  if (!hasUploads) {
+    await db('document_requirements')
+      .where({ id })
+      .delete();
+    res.json({
+      ...mapRequirement(currentReq),
+      active: false,
+      deleted: true,
+    });
+  } else {
+    const [row] = await db('document_requirements')
+      .where({ id })
+      .update({ active: false })
+      .returning('*');
+    res.json(mapRequirement(row));
+  }
 }));
 
 router.get('/documents', authMiddleware, rbac('coordinator', 'faculty_supervisor', 'admin'), asyncHandler(async (req: Request, res: Response) => {
