@@ -28,6 +28,8 @@ pnpm dev
 
 The API runs at `http://localhost:3000`. Swagger UI: `http://localhost:3000/docs`
 
+Set `CORS_ORIGINS` in `.env` to control which frontends may call the API: `*` (default) allows any origin, or list URLs separated by commas (e.g. `http://localhost:5173`).
+
 ## Deploy en Netlify
 
 Este backend se despliega en Netlify como una **serverless function** (`serverless-http` + Express). PostgreSQL debe estar alojado externamente (por ejemplo [Neon](https://neon.tech), [Supabase](https://supabase.com) o [Railway](https://railway.app)).
@@ -48,6 +50,7 @@ En **Site configuration → Environment variables**, configura:
 | `ENCRYPTION_KEY` | 64 caracteres hex (32 bytes) |
 | `WEBHOOK_SECRET` | Secreto para firmar webhooks |
 | `BASE_URL` | URL del sitio Netlify, p. ej. `https://tu-sitio.netlify.app` |
+| `CORS_ORIGINS` | `*` para cualquier origen, o URLs del frontend separadas por coma, p. ej. `https://app.ejemplo.com` |
 | `STUDENT_PROFILE_CACHE_TTL_MINUTES` | Opcional, default `30` |
 
 `SKIP_RUNTIME_MIGRATIONS=true` ya está definido en `netlify.toml` para que las migraciones corran solo en el build.
