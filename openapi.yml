@@ -7,6 +7,21 @@ info:
     The contract includes core platform endpoints, Odoo-like module
     management endpoints, and dummy auth/student-data provider endpoints
     used to demonstrate integration with multiple college-owned systems.
+
+    ## Student RBAC (whitelist)
+
+    Users with only the `student` role may access a fixed allowlist of endpoints.
+    All other `/api/v1/*` routes return 403. Staff roles (`admin`, `coordinator`,
+    `faculty_supervisor`, `external_supervisor`, `auditor`) bypass the whitelist.
+
+    | Method | Path | Student |
+    |--------|------|---------|
+    | POST | /api/v1/auth/login, /api/v1/auth/introspect | yes |
+    | GET | /api/v1/me, /api/v1/me/profile, /api/v1/me/applications, /api/v1/me/assignments, /api/v1/me/hour-logs, /api/v1/me/document-requirements, /api/v1/me/document-uploads, /api/v1/me/notifications, /api/v1/me/social-services/history | yes |
+    | POST | /api/v1/me/profile/refresh, /api/v1/me/hour-logs, /api/v1/me/evidence, /api/v1/me/document-requirements/{id}/upload | yes |
+    | PATCH | /api/v1/me/notifications/{id}/read | yes |
+    | GET | /api/v1/projects, /api/v1/projects/{id} | yes (published only) |
+    | POST | /api/v1/projects/{projectId}/applications | yes |
 servers:
   - url: https://social-hours.example.edu
     description: Core platform instance
@@ -546,6 +561,154 @@ paths:
                 $ref: "#/components/schemas/StudentProfile"
         "403":
           description: Current user is not a student
+
+  /api/v1/me/applications:
+    get:
+      tags: [Current User]
+      summary: List current student's project applications
+      operationId: getMyApplications
+      x-roles: [student]
+      responses:
+        "200":
+          description: Student applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectApplication"
+
+  /api/v1/me/assignments:
+    get:
+      tags: [Current User]
+      summary: List current student's assignments
+      operationId: getMyAssignments
+      x-roles: [student]
+      responses:
+        "200":
+          description: Student assignments with embedded project
+
+  /api/v1/me/hour-logs:
+    get:
+      tags: [Current User]
+      summary: List current student's hour logs
+      operationId: getMyHourLogs
+      x-roles: [student]
+      responses:
+        "200":
+          description: Hour logs for student assignments
+    post:
+      tags: [Current User]
+      summary: Create hour log for active assignment
+      operationId: createMyHourLog
+      x-roles: [student]
+      responses:
+        "201":
+          description: Hour log created
+
+  /api/v1/me/evidence:
+    post:
+      tags: [Current User]
+      summary: Upload evidence file for hour logs
+      operationId: uploadMyEvidence
+      x-roles: [student]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Evidence uploaded
+
+  /api/v1/me/document-requirements:
+    get:
+      tags: [Documents]
+      summary: List applicable document requirements with upload status
+      operationId: getMyDocumentRequirements
+      x-roles: [student]
+      responses:
+        "200":
+          description: Document requirement matrix
+
+  /api/v1/me/document-requirements/{requirementId}/upload:
+    post:
+      tags: [Documents]
+      summary: Upload document for a requirement
+      operationId: uploadMyDocument
+      x-roles: [student]
+      parameters:
+        - in: path
+          name: requirementId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Document upload registered
+
+  /api/v1/me/document-uploads:
+    get:
+      tags: [Documents]
+      summary: List current student's document uploads
+      operationId: getMyDocumentUploads
+      x-roles: [student]
+      responses:
+        "200":
+          description: Document uploads
+
+  /api/v1/me/notifications:
+    get:
+      tags: [Current User]
+      summary: Student notification inbox
+      operationId: getMyNotifications
+      x-roles: [student]
+      responses:
+        "200":
+          description: Notifications
+
+  /api/v1/me/notifications/{id}/read:
+    patch:
+      tags: [Current User]
+      summary: Mark notification as read
+      operationId: markMyNotificationRead
+      x-roles: [student]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated notification
+
+  /api/v1/me/social-services/history:
+    get:
+      tags: [Current User]
+      summary: Completed social service participations
+      operationId: getMySocialServicesHistory
+      x-roles: [student]
+      responses:
+        "200":
+          description: Social service history
 
   /api/v1/rules:
     get:

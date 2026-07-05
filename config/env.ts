@@ -33,6 +33,9 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error('Invalid environment configuration:', parsed.error.flatten().fieldErrors);
+  if (process.env.NODE_ENV === 'test') {
+    throw new Error('Invalid environment configuration for tests');
+  }
   process.exit(1);
 }
 
