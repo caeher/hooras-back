@@ -16,8 +16,9 @@
     "lint": "eslint . --ext .ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
     "openapi:lint": "redocly lint openapi.yml",
-    "openapi:docs": "redocly build-docs openapi.yml -o docs/api.html --title \"Social Hours Platform API\""
+    "openapi:docs": "pnpm run openapi:generate && redocly build-docs openapi.yml -o docs/api.html --title \"Social Hours Platform API\""
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
@@ -50,6 +51,7 @@
     "@types/supertest": "^7.2.0",
     "@types/swagger-ui-express": "^4.1.7",
     "@types/uuid": "^10.0.0",
+    "express-list-endpoints": "^7.1.1",
     "supertest": "^7.2.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
