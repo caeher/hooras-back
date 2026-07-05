@@ -124,6 +124,32 @@ paths:
                   $ref: "#/components/schemas/SetupModuleOption"
         "410":
           description: Setup already completed
+    put:
+      tags: [ Setup ]
+      summary: Install and enable selected domain modules
+      operationId: configureSetupModules
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ moduleKeys ]
+              properties:
+                moduleKeys:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Updated setup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+        "410":
+          description: Setup already completed
 
   /api/v1/setup/instance:
     put:
@@ -166,34 +192,6 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/SetupConnectorInput"
-      responses:
-        "200":
-          description: Updated setup status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SetupStatus"
-        "410":
-          description: Setup already completed
-
-  /api/v1/setup/modules:
-    put:
-      tags: [ Setup ]
-      summary: Install and enable selected domain modules
-      operationId: configureSetupModules
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [ moduleKeys ]
-              properties:
-                moduleKeys:
-                  type: array
-                  items:
-                    type: string
       responses:
         "200":
           description: Updated setup status
@@ -2056,6 +2054,103 @@ paths:
       responses:
         "200":
           description: Success
+  /api/v1/companies:
+    get:
+      tags:
+        - Companies
+      summary: List all companies
+      operationId: listCompanies
+      responses:
+        "200":
+          description: List of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Company"
+    post:
+      tags:
+        - Companies
+      summary: Create a company
+      operationId: createCompany
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyInput"
+      responses:
+        "201":
+          description: Company created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+  /api/v1/companies/{companyId}:
+    get:
+      tags:
+        - Companies
+      summary: Get a company by ID
+      operationId: getCompany
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "200":
+          description: Company details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+    patch:
+      tags:
+        - Companies
+      summary: Update a company
+      operationId: updateCompany
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyPatch"
+      responses:
+        "200":
+          description: Company updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+    delete:
+      tags:
+        - Companies
+      summary: Delete a company
+      operationId: deleteCompany
+      parameters:
+        - $ref: "#/components/parameters/CompanyId"
+      responses:
+        "204":
+          description: Company deleted
+  /api/v1/job-search/scrape-contact:
+    post:
+      tags:
+        - Health
+      summary: Auto-generated from Express route (POST
+        /api/v1/job-search/scrape-contact)
+      operationId: postApiV1Job-searchScrape-contact
+      responses:
+        "200":
+          description: Success
+  /api/v1/job-search/search:
+    post:
+      tags:
+        - Health
+      summary: Auto-generated from Express route (POST /api/v1/job-search/search)
+      operationId: postApiV1Job-searchSearch
+      responses:
+        "200":
+          description: Success
 
 components:
   securitySchemes:
@@ -2096,6 +2191,13 @@ components:
     ProjectId:
       in: path
       name: projectId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CompanyId:
+      in: path
+      name: companyId
       required: true
       schema:
         type: string
@@ -2143,6 +2245,89 @@ components:
         type: string
 
   schemas:
+    Company:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CompanyInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        address:
+          type: string
+          nullable: true
+
+    CompanyPatch:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        website:
+          type: string
+          format: uri
+          nullable: true
+        address:
+          type: string
+          nullable: true
+
     HealthStatus:
       type: object
       required: [ status, checkedAt ]
