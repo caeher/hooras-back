@@ -2,6 +2,7 @@ import { Express } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../../database';
 import { encrypt, decrypt } from '../../app/utils/crypto';
+import { isLocalhostUrl } from '../../config/bundledProvider';
 import { BadRequestError, NotFoundError } from '../../app/utils/errors';
 import { AuthConnectorModule } from '../contracts/auth.contract';
 import { StudentDataConnectorModule } from '../contracts/studentData.contract';
@@ -470,6 +471,7 @@ class ModuleRegistryClass {
     const rows = await db('installed_modules').where({ enabled: true });
     for (const row of rows) {
       if (this.catalog.has(row.module_key as string)) {
+        await this.syncStaleBundledModuleUrls(row.module_key as string);
         await this.reloadInstanceConfig(row.module_key as string);
         await this.applyFeatureCapabilities(row.module_key as string);
       }
@@ -496,9 +498,39 @@ class ModuleRegistryClass {
           if (defaults) {
             await this.configureModule(moduleKey, defaults.values, defaults.secrets);
           }
+        } else {
+          await this.syncStaleBundledModuleUrls(moduleKey);
         }
       }
     }
+  }
+
+  private async syncStaleBundledModuleUrls(moduleKey: string): Promise<void> {
+    const descriptor = this.catalog.get(moduleKey)?.descriptor;
+    const defaults = descriptor?.getDefaultConfig?.();
+    if (!defaults?.secrets?.apiBaseUrl) return;
+
+    const config = await db('module_configs').where({ module_key: moduleKey }).first();
+    if (!config?.encrypted_secrets) return;
+
+    const enc = typeof config.encrypted_secrets === 'string'
+      ? JSON.parse(config.encrypted_secrets)
+      : config.encrypted_secrets;
+
+    const storedApiBaseUrl = enc.apiBaseUrl as string | undefined;
+    if (!storedApiBaseUrl) return;
+
+    let decrypted = '';
+    try {
+      decrypted = decrypt(storedApiBaseUrl);
+    } catch {
+      return;
+    }
+
+    if (!isLocalhostUrl(decrypted)) return;
+    if (decrypted === defaults.secrets.apiBaseUrl) return;
+
+    await this.configureModule(moduleKey, defaults.values ?? {}, defaults.secrets);
   }
 
   private async ensureFeaturesSeeded(moduleKey: string) {
