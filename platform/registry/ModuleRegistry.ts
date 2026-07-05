@@ -10,6 +10,7 @@ import { platformEventBus } from '../module/EventBus';
 import { ModuleRouteManager } from '../module/ModuleRouteManager';
 import { runModuleMigrations, rollbackModuleMigrations } from '../module/ModuleMigrationRunner';
 import { serviceRegistry } from '../module/ServiceRegistry';
+import { sortModuleKeysByDependencies } from './sortModuleKeysByDependencies';
 import {
   isAuthConnector,
   isStudentDataConnector,
@@ -497,7 +498,23 @@ class ModuleRegistryClass {
   }
 
   async ensureDefaultModulesInstalled(moduleKeys: string[]): Promise<void> {
-    for (const moduleKey of moduleKeys) {
+    const orderedKeys = sortModuleKeysByDependencies(moduleKeys, (moduleKey) => {
+      const descriptor = this.getDescriptor(moduleKey);
+      const deps = new Set(descriptor.manifest.dependencies ?? []);
+
+      for (const service of descriptor.manifest.requiredServices ?? []) {
+        for (const [providerKey, { descriptor: provider }] of this.catalog) {
+          if (provider.manifest.providedServices?.includes(service)) {
+            deps.add(providerKey);
+            break;
+          }
+        }
+      }
+
+      return Array.from(deps);
+    });
+
+    for (const moduleKey of orderedKeys) {
       const existing = await db('installed_modules').where({ module_key: moduleKey }).first();
       if (!existing) {
         await this.installModule(moduleKey);
