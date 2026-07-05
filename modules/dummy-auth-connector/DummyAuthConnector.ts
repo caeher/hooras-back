@@ -1,4 +1,5 @@
 import { BadRequestError } from '../../app/utils/errors';
+import { resolvePublicBaseUrl } from '../../config/publicUrl';
 import { AuthConnectorModule, AuthLoginParams } from '../../platform/contracts/auth.contract';
 import {
   AuthIntrospectionResult,
@@ -8,6 +9,7 @@ import {
   ModuleTestResult,
   UserRole,
 } from '../../platform/types';
+import { getDemoUserInfo, introspectDemoToken, issuePasswordToken } from './demo-auth/service';
 import { dummyAuthManifest } from './manifest';
 
 const VALID_ROLES: UserRole[] = [
@@ -27,11 +29,45 @@ export class DummyAuthConnector implements AuthConnectorModule {
   }
 
   async configure(values: Record<string, unknown>, secrets: Record<string, string>): Promise<void> {
-    if (secrets.apiBaseUrl) this.apiBaseUrl = secrets.apiBaseUrl;
     if (values.providerProfile) this.providerProfile = String(values.providerProfile);
+    this.apiBaseUrl = this.resolveApiBaseUrl(secrets.apiBaseUrl);
+  }
+
+  private bundledDemoAuthUrl(): string {
+    return `${resolvePublicBaseUrl()}/demo-auth`;
+  }
+
+  private resolveApiBaseUrl(configured?: string): string {
+    const bundledUrl = this.bundledDemoAuthUrl();
+    if (!configured) return bundledUrl;
+
+    try {
+      const hostname = new URL(configured).hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return bundledUrl;
+      }
+    } catch {
+      return bundledUrl;
+    }
+
+    return configured.replace(/\/$/, '');
+  }
+
+  private usesBundledDemoAuth(): boolean {
+    return this.apiBaseUrl === this.bundledDemoAuthUrl();
   }
 
   async testConnection(): Promise<ModuleTestResult> {
+    if (this.usesBundledDemoAuth()) {
+      return {
+        moduleKey: this.moduleKey,
+        status: 'success',
+        contract: 'auth.v1',
+        message: 'Bundled demo auth provider active',
+        checkedAt: new Date().toISOString(),
+      };
+    }
+
     try {
       const res = await fetch(`${this.apiBaseUrl}/.well-known/openid-configuration`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -71,6 +107,23 @@ export class DummyAuthConnector implements AuthConnectorModule {
     if (!this.enabledCapabilities.has('auth.login')) {
       throw new BadRequestError('Password login feature is disabled for this module');
     }
+
+    if (this.usesBundledDemoAuth()) {
+      const data = await issuePasswordToken(
+        params.username,
+        params.password,
+        params.providerProfile ?? this.providerProfile,
+      );
+      const user = await this.getUserInfo(data.accessToken);
+      return {
+        accessToken: data.accessToken,
+        tokenType: 'Bearer',
+        expiresIn: data.expiresIn,
+        issuedByModule: this.moduleKey,
+        user,
+      };
+    }
+
     const res = await fetch(`${this.apiBaseUrl}/oauth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -98,6 +151,18 @@ export class DummyAuthConnector implements AuthConnectorModule {
     if (!this.enabledCapabilities.has('auth.introspect')) {
       return { active: false, checkedByModule: this.moduleKey };
     }
+
+    if (this.usesBundledDemoAuth()) {
+      const data = await introspectDemoToken(token);
+      return {
+        active: data.active,
+        checkedByModule: this.moduleKey,
+        externalUserId: data.sub,
+        roles: this.mapExternalRoles(data.roles ?? []),
+        expiresAt: data.exp ? new Date(data.exp * 1000).toISOString() : undefined,
+      };
+    }
+
     const res = await fetch(`${this.apiBaseUrl}/oauth/introspect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -117,6 +182,11 @@ export class DummyAuthConnector implements AuthConnectorModule {
     if (!this.enabledCapabilities.has('auth.userinfo')) {
       throw new BadRequestError('User info feature is disabled for this module');
     }
+
+    if (this.usesBundledDemoAuth()) {
+      return getDemoUserInfo(token);
+    }
+
     const res = await fetch(`${this.apiBaseUrl}/userinfo`, {
       headers: { Authorization: `Bearer ${token}` },
     });

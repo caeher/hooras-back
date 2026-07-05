@@ -1,4 +1,4 @@
-import { env } from '../../config/env';
+import { resolvePublicBaseUrl } from '../../config/publicUrl';
 import { PlatformModuleDescriptor } from '../../platform/module/PlatformModule';
 import { dummyAuthConnector } from './DummyAuthConnector';
 import { dummyAuthManifest } from './manifest';
@@ -12,7 +12,7 @@ const descriptor: PlatformModuleDescriptor = {
   getDefaultConfig() {
     return {
       values: { providerProfile: 'default' },
-      secrets: { apiBaseUrl: `${env.BASE_URL}/demo-auth` },
+      secrets: { apiBaseUrl: `${resolvePublicBaseUrl()}/demo-auth` },
     };
   },
 
