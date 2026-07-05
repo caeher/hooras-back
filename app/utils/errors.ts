@@ -39,3 +39,9 @@ export class ConflictError extends AppError {
     super(409, code, message);
   }
 }
+
+export class ExternalServiceError extends AppError {
+  constructor(message: string, code = 'EXTERNAL_SERVICE_ERROR', details?: unknown) {
+    super(502, code, message, details);
+  }
+}

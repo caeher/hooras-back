@@ -5,11 +5,15 @@ import db from '../../../database';
 import { asyncHandler } from '../../../app/middleware/asyncHandler';
 import { validate } from '../../../app/middleware/validate';
 import { authMiddleware, rbac } from '../../../app/middleware/auth';
-import { NotFoundError } from '../../../app/utils/errors';
+import { BadRequestError, NotFoundError } from '../../../app/utils/errors';
 import { writeAuditEvent } from '../../../app/utils/audit';
 import { getService } from '../../../platform/module/ServiceRegistry';
 import { PROJECTS_V1, ProjectsServiceV1 } from '../../../platform/contracts/services';
-import { simulateFirecrawlRun } from '../services/firecrawl.service';
+import {
+  assertFirecrawlConfigured,
+  FirecrawlIntegrationError,
+  runFirecrawlImport,
+} from '../services/firecrawl.service';
 const runSchema = z.object({
   startUrls: z.array(z.string().url()),
   query: z.string().optional(),
@@ -34,6 +38,15 @@ function mapImportResult(row: Record<string, unknown>) {
 }
 
 router.post('/firecrawl/runs', authMiddleware, rbac('coordinator', 'admin'), validate(runSchema), asyncHandler(async (req: Request, res: Response) => {
+  try {
+    assertFirecrawlConfigured();
+  } catch (error) {
+    if (error instanceof FirecrawlIntegrationError) {
+      throw new BadRequestError(error.message, error.code);
+    }
+    throw error;
+  }
+
   const runId = uuidv4();
   await db('import_runs').insert({
     id: runId,
@@ -41,7 +54,7 @@ router.post('/firecrawl/runs', authMiddleware, rbac('coordinator', 'admin'), val
     request: JSON.stringify(req.body),
     created_at: new Date(),
   });
-  simulateFirecrawlRun(runId, req.body);
+  void runFirecrawlImport(runId, req.body);
   res.status(202).json({ id: runId, status: 'queued', createdAt: new Date().toISOString() });
 }));
 

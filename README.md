@@ -145,7 +145,7 @@ curl -X POST http://localhost:3000/api/v1/projects \
     "publicSafe": true
   }'
 
-# Publish (triggers n8n stub if publicSafe)
+# Publish (triggers n8n webhook if publicSafe and N8N_WEBHOOK_URL is configured)
 curl -X POST http://localhost:3000/api/v1/projects/<projectId>/publish \
   -H "Authorization: Bearer <coord-token>"
 ```
@@ -229,7 +229,15 @@ Domain modules (modules/) — installable, own migrations + routes
   └── each module: manifest, services/, routes/, migrations/
 ```
 
-External integrations (ZAVU/n8n/Firecrawl) are implemented inside their respective modules (`notifications`, `projects`, `imports`).
+External integrations: Firecrawl imports use the Firecrawl API, n8n project-publish workflows use a configured webhook URL, and ZAVU notifications remain stubbed for MVP demo purposes.
+
+### n8n Integration
+
+Set `N8N_WEBHOOK_URL` to the production webhook URL of an active n8n workflow. When a `publicSafe` project is published, the backend posts a `project.published` JSON payload to that webhook. Optional settings:
+
+- `N8N_API_KEY`: sent as `X-N8N-API-KEY` when configured.
+- `N8N_TIMEOUT_MS`: request timeout, default `15000`.
+- `N8N_MAX_RETRIES`: retries for timeouts, `429`, and `5xx`, default `2`.
 
 ## Module System
 

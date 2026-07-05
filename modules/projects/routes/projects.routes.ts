@@ -5,10 +5,11 @@ import db from '../../../database';
 import { asyncHandler } from '../../../app/middleware/asyncHandler';
 import { validate } from '../../../app/middleware/validate';
 import { authMiddleware, rbac } from '../../../app/middleware/auth';
-import { NotFoundError, BadRequestError } from '../../../app/utils/errors';
+import { NotFoundError, BadRequestError, ExternalServiceError } from '../../../app/utils/errors';
 import { writeAuditEvent } from '../../../app/utils/audit';
 import { platformEventBus } from '../../../platform/module/EventBus';
 import { mapProject } from '../services/projects.service';
+import { N8nIntegrationError, triggerProjectPostedWorkflow } from '../services/n8n.service';
 
 const projectInputSchema = z.object({
   title: z.string(),
@@ -123,24 +124,37 @@ router.post('/:projectId/publish', authMiddleware, rbac('coordinator', 'admin'),
   await platformEventBus.emit('project.published', projectPayload);
 
   if (updated.public_safe) {
-    const payload = {
-      event: 'project.published',
-      project: projectPayload,
-      timestamp: new Date().toISOString(),
-    };
-    const webhookUrl = process.env.N8N_WEBHOOK_URL;
-    if (webhookUrl) {
-      try {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      } catch (e) {
-        console.warn('[n8n stub] Failed to call webhook:', (e as Error).message);
-      }
-    } else {
-      console.log('[n8n stub] Project published workflow triggered:', updated.title);
+    try {
+      const n8nResponse = await triggerProjectPostedWorkflow(projectPayload);
+      await writeAuditEvent({
+        actorRef: req.user!.externalUserId,
+        action: 'n8n.workflow.triggered',
+        entityType: 'project',
+        entityId: updated.id as string,
+        metadata: { statusCode: n8nResponse.statusCode, response: n8nResponse.body },
+      });
+    } catch (error) {
+      const n8nError = error instanceof N8nIntegrationError
+        ? error
+        : new N8nIntegrationError((error as Error).message, 'N8N_UNKNOWN_ERROR');
+      await writeAuditEvent({
+        actorRef: req.user!.externalUserId,
+        action: 'n8n.workflow.failed',
+        entityType: 'project',
+        entityId: updated.id as string,
+        metadata: {
+          code: n8nError.code,
+          message: n8nError.message,
+          statusCode: n8nError.statusCode,
+          retryable: n8nError.retryable,
+          details: n8nError.details,
+        },
+      });
+      throw new ExternalServiceError(n8nError.message, n8nError.code, {
+        statusCode: n8nError.statusCode,
+        retryable: n8nError.retryable,
+        details: n8nError.details,
+      });
     }
   }
 
