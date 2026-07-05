@@ -59,7 +59,10 @@ function mapDocument(row: Record<string, unknown>) {
 }
 
 router.get('/document-requirements', authMiddleware, rbac('admin', 'coordinator'), asyncHandler(async (_req: Request, res: Response) => {
-  const rows = await db('document_requirements').select('*');
+  const rows = await db('document_requirements')
+    .select('*')
+    .orderBy('active', 'desc')
+    .orderBy('label', 'asc');
   res.json(rows.map(mapRequirement));
 }));
 
