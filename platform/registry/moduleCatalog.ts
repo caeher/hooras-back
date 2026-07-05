@@ -7,6 +7,7 @@ import dummyAuthConnector from '../../modules/dummy-auth-connector';
 import dummyStudentDataConnector from '../../modules/dummy-student-data-connector';
 import hours from '../../modules/hours';
 import imports from '../../modules/imports';
+import jobSearch from '../../modules/job-search';
 import notifications from '../../modules/notifications';
 import projects from '../../modules/projects';
 import reports from '../../modules/reports';
@@ -26,6 +27,7 @@ export const BUILTIN_MODULE_DESCRIPTORS: PlatformModuleDescriptor[] = [
   dummyStudentDataConnector,
   hours,
   imports,
+  jobSearch,
   notifications,
   projects,
   reports,

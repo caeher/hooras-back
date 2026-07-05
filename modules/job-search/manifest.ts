@@ -1,0 +1,16 @@
+export const manifest = {
+  moduleKey: 'job-search',
+  displayName: 'Job Search',
+  version: '0.1.0',
+  moduleType: 'scraper_connector' as const,
+  description: 'Job offer search and contact extraction via Firecrawl',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  setupTier: 'optional' as const,
+  dependencies: [] as string[],
+  capabilities: ['job-search.search', 'job-search.scrape-contact'],
+  providedServices: [] as string[],
+  providedContracts: [] as string[],
+  features: [],
+};

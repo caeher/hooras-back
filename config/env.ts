@@ -21,6 +21,7 @@ const envSchema = z.object({
   FIRECRAWL_API_KEY: optionalNonEmptyString,
   FIRECRAWL_API_URL: z.string().url().default('https://api.firecrawl.dev/v1'),
   FIRECRAWL_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
+  FIRECRAWL_MAX_RESULTS: z.coerce.number().int().min(1).max(25).default(10),
   N8N_WEBHOOK_URL: z.preprocess(
     (value) => (value === '' ? undefined : value),
     z.string().url().optional()
