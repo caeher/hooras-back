@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { asyncHandler } from '../../../app/middleware/asyncHandler';
 import { validate } from '../../../app/middleware/validate';
 import { authMiddleware, rbac } from '../../../app/middleware/auth';
+import { ForbiddenError } from '../../../app/utils/errors';
+import { isStudentOnly } from '../../../app/rbac/staffRoles';
 import { writeAuditEvent } from '../../../app/utils/audit';
 import { getService } from '../../../platform/module/ServiceRegistry';
 import { RULES_V1, RulesServiceV1 } from '../../../platform/contracts/services';
@@ -35,7 +37,7 @@ const evaluateSchema = z.object({
 
 const router = Router();
 
-router.get('/', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
+router.get('/', authMiddleware, rbac('admin', 'coordinator'), asyncHandler(async (req: Request, res: Response) => {
   const rulesService = getService<RulesServiceV1>(RULES_V1);
   const rules = await rulesService.listRules({
     facultyCode: req.query.facultyCode as string,
@@ -58,6 +60,13 @@ router.post('/', authMiddleware, rbac('admin', 'coordinator'), validate(ruleInpu
 }));
 
 router.post('/evaluate', authMiddleware, validate(evaluateSchema), asyncHandler(async (req: Request, res: Response) => {
+  if (
+    req.user &&
+    isStudentOnly(req.user.roles) &&
+    req.body.studentRef !== req.user.studentRef
+  ) {
+    throw new ForbiddenError('Cannot evaluate rules for another student');
+  }
   const rulesService = getService<RulesServiceV1>(RULES_V1);
   const result = await rulesService.evaluateRules(
     req.body.studentRef,

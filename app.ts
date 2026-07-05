@@ -6,7 +6,8 @@ import { readFileSync } from 'fs';
 import { parse as parseYaml } from 'yaml';
 import { resolveBundledAsset } from './config/runtime';
 import { errorHandler } from './app/middleware/errorHandler';
-import { authMiddleware } from './app/middleware/auth';
+import { authMiddleware, optionalAuth } from './app/middleware/auth';
+import { studentWhitelist } from './app/middleware/studentWhitelist';
 
 import healthRoutes from './core/health/health.routes';
 import modulesRoutes from './core/modules-admin/modules.routes';
@@ -14,6 +15,7 @@ import providerConnectionsRoutes from './core/provider-connections/providerConne
 import authRoutes from './core/auth/auth.routes';
 import studentDataRoutes from './core/student-data/studentData.routes';
 import meRoutes from './core/me/me.routes';
+import studentMeRoutes from './core/me/studentMe.routes';
 import auditRoutes from './core/audit/audit.routes';
 import webhooksRoutes from './core/webhooks/webhooks.routes';
 import configRoutes from './core/config/config.routes';
@@ -30,6 +32,8 @@ export function createApp() {
   app.use(cors());
   app.use(express.json());
 
+  app.use('/api/v1', optionalAuth, studentWhitelist);
+
   const openapiPath = resolveBundledAsset('openapi.yml');
   try {
     const spec = parseYaml(readFileSync(openapiPath, 'utf8'));
@@ -45,6 +49,7 @@ export function createApp() {
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/student-data', studentDataRoutes);
   app.use('/api/v1/me', meRoutes);
+  app.use('/api/v1/me', studentMeRoutes);
   app.use('/api/v1/audit-log', auditRoutes);
   app.use('/api/v1/webhooks', webhooksRoutes);
   app.use('/api/v1/config', configRoutes);

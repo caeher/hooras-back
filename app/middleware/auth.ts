@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../../database';
-import { UnauthorizedError } from '../utils/errors';
+import { ForbiddenError, UnauthorizedError } from '../utils/errors';
 import { ModuleRegistry } from '../../platform/registry/ModuleRegistry';
 import { UserRole } from '../../platform/types';
 
@@ -58,6 +58,6 @@ export const rbac = (...allowedRoles: UserRole[]) =>
   (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) return next(new UnauthorizedError());
     const hasRole = req.user.roles.some((r) => allowedRoles.includes(r));
-    if (!hasRole) return next(new UnauthorizedError('Insufficient permissions'));
+    if (!hasRole) return next(new ForbiddenError('Insufficient permissions'));
     next();
   };
