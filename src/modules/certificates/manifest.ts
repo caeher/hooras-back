@@ -1,0 +1,14 @@
+export const manifest = {
+  moduleKey: 'certificates',
+  displayName: 'Certificates',
+  version: '0.1.0',
+  moduleType: 'certificates' as const,
+  description: 'Social hours certificate generation',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['rules', 'hours', 'documents', 'notifications'],
+  requiredServices: ['rules.v1', 'hours.v1', 'documents.v1', 'notifications.v1'],
+  capabilities: ['certificates.generate'],
+  features: [],
+};

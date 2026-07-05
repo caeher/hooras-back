@@ -1,0 +1,16 @@
+export const manifest = {
+  moduleKey: 'assignments',
+  displayName: 'Assignments',
+  version: '0.1.0',
+  moduleType: 'assignments' as const,
+  description: 'Student project assignments',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['projects'],
+  requiredServices: ['projects.v1'],
+  capabilities: ['assignments.list', 'assignments.create'],
+  providedServices: ['assignments.v1'],
+  providedContracts: ['assignments.v1'],
+  features: [],
+};

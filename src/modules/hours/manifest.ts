@@ -1,0 +1,16 @@
+export const manifest = {
+  moduleKey: 'hours',
+  displayName: 'Hours',
+  version: '0.1.0',
+  moduleType: 'hours' as const,
+  description: 'Hour logging and approval',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['assignments'],
+  requiredServices: ['assignments.v1', 'notifications.v1'],
+  capabilities: ['hours.log', 'hours.approve', 'hours.reject'],
+  providedServices: ['hours.v1'],
+  providedContracts: ['hours.v1'],
+  features: [],
+};

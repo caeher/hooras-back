@@ -1,0 +1,30 @@
+export const requirementRulesSeed = [
+  {
+    name: 'Horas sociales generales - Ingeniería',
+    scope: JSON.stringify({ facultyCode: 'ING', programCode: 'ING-SIS' }),
+    required_hours: 80,
+    category_hours: JSON.stringify({ environmental: 20, community: 40 }),
+    minimum_progress_percentage: 60,
+    required_academic_statuses: JSON.stringify(['active', 'graduate_candidate']),
+    required_course_codes: JSON.stringify([]),
+    active: true,
+  },
+  {
+    name: 'Horas sociales generales - Administración',
+    scope: JSON.stringify({ facultyCode: 'ECO', programCode: 'ADM-001' }),
+    required_hours: 75,
+    category_hours: JSON.stringify({ community: 30 }),
+    minimum_progress_percentage: 50,
+    required_academic_statuses: JSON.stringify(['active']),
+    active: true,
+  },
+  {
+    name: 'Horas sociales - Psicología (egresados)',
+    scope: JSON.stringify({ facultyCode: 'SAL', programCode: 'PSI' }),
+    required_hours: 100,
+    category_hours: JSON.stringify({ community: 50, research: 20 }),
+    minimum_progress_percentage: 90,
+    required_academic_statuses: JSON.stringify(['egresado', 'graduate_candidate']),
+    active: true,
+  },
+];

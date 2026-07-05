@@ -1,0 +1,14 @@
+export const manifest = {
+  moduleKey: 'imports',
+  displayName: 'Imports',
+  version: '0.1.0',
+  moduleType: 'scraper_connector' as const,
+  description: 'Project import from external scrapers',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['projects'],
+  requiredServices: ['projects.v1'],
+  capabilities: ['imports.firecrawl', 'imports.review'],
+  features: [],
+};

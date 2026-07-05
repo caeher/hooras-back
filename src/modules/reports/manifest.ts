@@ -1,0 +1,14 @@
+export const manifest = {
+  moduleKey: 'reports',
+  displayName: 'Reports',
+  version: '0.1.0',
+  moduleType: 'reporting_extension' as const,
+  description: 'Operational reporting and dashboards',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['rules', 'hours', 'assignments', 'projects'],
+  requiredServices: ['rules.v1', 'hours.v1', 'assignments.v1', 'projects.v1'],
+  capabilities: ['reports.progress', 'reports.projects'],
+  features: [],
+};

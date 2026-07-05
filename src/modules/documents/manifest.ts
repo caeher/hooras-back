@@ -1,0 +1,16 @@
+export const manifest = {
+  moduleKey: 'documents',
+  displayName: 'Documents',
+  version: '0.1.0',
+  moduleType: 'documents' as const,
+  description: 'Document requirements and uploads',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: [] as string[],
+  requiredServices: ['notifications.v1'],
+  capabilities: ['documents.requirements', 'documents.upload', 'documents.approve'],
+  providedServices: ['documents.v1'],
+  providedContracts: ['documents.v1'],
+  features: [],
+};

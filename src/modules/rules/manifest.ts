@@ -1,0 +1,15 @@
+export const manifest = {
+  moduleKey: 'rules',
+  displayName: 'Requirement Rules',
+  version: '0.1.0',
+  moduleType: 'rules_extension' as const,
+  description: 'Configurable social hours requirement rules and eligibility evaluation',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: [] as string[],
+  capabilities: ['rules.list', 'rules.create', 'rules.evaluate'],
+  providedServices: ['rules.v1'],
+  providedContracts: ['rules.v1'],
+  features: [],
+};

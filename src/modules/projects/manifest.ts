@@ -1,0 +1,15 @@
+export const manifest = {
+  moduleKey: 'projects',
+  displayName: 'Projects',
+  version: '0.1.0',
+  moduleType: 'projects' as const,
+  description: 'Social hours project catalog and lifecycle',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: [] as string[],
+  capabilities: ['projects.list', 'projects.create', 'projects.publish', 'applications.submit'],
+  providedServices: ['projects.v1'],
+  providedContracts: ['projects.v1'],
+  features: [],
+};

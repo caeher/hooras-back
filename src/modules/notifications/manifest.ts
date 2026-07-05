@@ -1,0 +1,15 @@
+export const manifest = {
+  moduleKey: 'notifications',
+  displayName: 'Notifications',
+  version: '0.1.0',
+  moduleType: 'notification_connector' as const,
+  description: 'Notification delivery and logging',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: [] as string[],
+  capabilities: ['notifications.send'],
+  providedServices: ['notifications.v1'],
+  providedContracts: ['notifications.v1'],
+  features: [],
+};

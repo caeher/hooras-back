@@ -1,0 +1,16 @@
+export const manifest = {
+  moduleKey: 'student-profile',
+  displayName: 'Student Profile',
+  version: '0.1.0',
+  moduleType: 'student_profile' as const,
+  description: 'Aggregated student social hours profile',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['rules', 'hours', 'documents'],
+  requiredServices: ['rules.v1', 'hours.v1', 'documents.v1'],
+  capabilities: ['student-profile.read', 'student-profile.refresh'],
+  providedServices: ['student-profile.v1'],
+  providedContracts: ['student-profile.v1'],
+  features: [],
+};

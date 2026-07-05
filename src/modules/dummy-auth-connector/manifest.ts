@@ -1,0 +1,41 @@
+export const dummyAuthManifest = {
+  moduleKey: 'dummy-auth-connector',
+  displayName: 'Dummy Auth Connector',
+  version: '0.1.0',
+  moduleType: 'auth_connector' as const,
+  description: 'MVP auth connector that delegates to the demo auth provider',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: [] as string[],
+  capabilities: ['auth.login', 'auth.introspect', 'auth.userinfo', 'auth.roles'],
+  features: [
+    {
+      key: 'password_login',
+      name: 'Password login',
+      description: 'Allow username/password login via demo provider',
+      default: true,
+      capabilities: ['auth.login'],
+    },
+    {
+      key: 'token_introspection',
+      name: 'Token introspection',
+      description: 'Validate bearer tokens',
+      default: true,
+      capabilities: ['auth.introspect'],
+    },
+    {
+      key: 'userinfo',
+      name: 'User info',
+      description: 'Fetch user profile from provider',
+      default: true,
+      capabilities: ['auth.userinfo', 'auth.roles'],
+    },
+  ],
+  providedContracts: ['auth.v1'],
+  requiredSecrets: ['apiBaseUrl'],
+  configurationSchema: {
+    providerProfile: { type: 'string', enum: ['default'], default: 'default' },
+  },
+  permissions: ['external.auth.read'],
+};

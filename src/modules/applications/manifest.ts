@@ -1,0 +1,14 @@
+export const manifest = {
+  moduleKey: 'applications',
+  displayName: 'Applications',
+  version: '0.1.0',
+  moduleType: 'applications' as const,
+  description: 'Project application review and approval',
+  author: 'Social Hours Platform',
+  license: 'MIT',
+  platformVersion: '0.1.0',
+  dependencies: ['projects', 'assignments'],
+  requiredServices: ['assignments.v1', 'notifications.v1'],
+  capabilities: ['applications.list', 'applications.approve', 'applications.reject'],
+  features: [],
+};
