@@ -10,7 +10,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express", "pg", "knex"]
+  external_node_modules = ["pg", "knex", "swagger-ui-express", "swagger-ui-dist"]
   included_files = [
     "openapi.yml",
     "modules/**/migrations/**",
