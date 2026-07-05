@@ -1,5 +1,5 @@
 import { BadRequestError } from '../../app/utils/errors';
-import { resolvePublicBaseUrl } from '../../config/publicUrl';
+import { resolveBundledApiBaseUrl, usesBundledApiBaseUrl } from '../../config/bundledProvider';
 import { AuthConnectorModule, AuthLoginParams } from '../../platform/contracts/auth.contract';
 import {
   AuthIntrospectionResult,
@@ -30,31 +30,11 @@ export class DummyAuthConnector implements AuthConnectorModule {
 
   async configure(values: Record<string, unknown>, secrets: Record<string, string>): Promise<void> {
     if (values.providerProfile) this.providerProfile = String(values.providerProfile);
-    this.apiBaseUrl = this.resolveApiBaseUrl(secrets.apiBaseUrl);
-  }
-
-  private bundledDemoAuthUrl(): string {
-    return `${resolvePublicBaseUrl()}/demo-auth`;
-  }
-
-  private resolveApiBaseUrl(configured?: string): string {
-    const bundledUrl = this.bundledDemoAuthUrl();
-    if (!configured) return bundledUrl;
-
-    try {
-      const hostname = new URL(configured).hostname;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return bundledUrl;
-      }
-    } catch {
-      return bundledUrl;
-    }
-
-    return configured.replace(/\/$/, '');
+    this.apiBaseUrl = resolveBundledApiBaseUrl('/demo-auth', secrets.apiBaseUrl);
   }
 
   private usesBundledDemoAuth(): boolean {
-    return this.apiBaseUrl === this.bundledDemoAuthUrl();
+    return usesBundledApiBaseUrl(this.apiBaseUrl, '/demo-auth');
   }
 
   async testConnection(): Promise<ModuleTestResult> {
