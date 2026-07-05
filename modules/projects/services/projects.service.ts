@@ -12,6 +12,7 @@ function mapProject(row: Record<string, unknown>) {
     title: row.title,
     description: row.description,
     organizationName: row.organization_name,
+    companyId: row.company_id,
     location: row.location,
     modality: row.modality,
     categories: parseJsonValue(row.categories as string | string[]),

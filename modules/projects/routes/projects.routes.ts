@@ -19,6 +19,7 @@ const projectInputSchema = z.object({
   title: z.string(),
   description: z.string(),
   organizationName: z.string(),
+  companyId: z.string().uuid().optional().nullable(),
   location: z.string().optional(),
   modality: z.enum(['onsite', 'remote', 'hybrid']).optional(),
   categories: z.array(z.string()),
@@ -56,6 +57,7 @@ router.post('/', authMiddleware, rbac('coordinator', 'admin'), validate(projectI
       title: body.title,
       description: body.description,
       organization_name: body.organizationName,
+      company_id: body.companyId || null,
       location: body.location,
       modality: body.modality,
       categories: JSON.stringify(body.categories),
@@ -99,6 +101,7 @@ router.patch('/:projectId', authMiddleware, rbac('coordinator', 'admin'), valida
   if (body.title) updates.title = body.title;
   if (body.description) updates.description = body.description;
   if (body.organizationName) updates.organization_name = body.organizationName;
+  if (body.companyId !== undefined) updates.company_id = body.companyId;
   if (body.location !== undefined) updates.location = body.location;
   if (body.modality) updates.modality = body.modality;
   if (body.categories) updates.categories = JSON.stringify(body.categories);

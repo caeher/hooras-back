@@ -54,6 +54,7 @@ export const assignmentsService: AssignmentsServiceV1 = {
         project_id: projectId,
         student_ref: studentRef,
         status: 'active',
+        supervisor_ref: project.companyId || project.organizationName,
       })
       .returning('*');
     return mapAssignment(row);
