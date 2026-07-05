@@ -58,12 +58,14 @@ export async function prepareDatabaseEnvironment(
       await ModuleRegistry.ensureDefaultModulesInstalled([...DEFAULT_MODULE_KEYS]);
       await SetupService.markLegacyComplete();
     } else {
+      await ModuleRegistry.ensureDefaultModulesInstalled([...DEFAULT_MODULE_KEYS]);
       await ModuleRegistry.bootstrapEnabledModules();
     }
     return;
   }
 
   if (await SetupService.isComplete()) {
+    await ModuleRegistry.ensureDefaultModulesInstalled([...DEFAULT_MODULE_KEYS]);
     await ModuleRegistry.bootstrapEnabledModules();
   }
 }
