@@ -52,8 +52,13 @@ En **Site configuration → Environment variables**, configura:
 | `BASE_URL` | URL del sitio Netlify, p. ej. `https://tu-sitio.netlify.app` |
 | `CORS_ORIGINS` | `*` para cualquier origen, o URLs del frontend separadas por coma, p. ej. `https://app.ejemplo.com` |
 | `STUDENT_PROFILE_CACHE_TTL_MINUTES` | Opcional, default `30` |
+| `STORAGE_BACKEND` | Opcional: `local` o `netlify-blobs`. En Netlify se auto-detecta `netlify-blobs` si no se define |
 
 `SKIP_RUNTIME_MIGRATIONS=true` ya está definido en `netlify.toml` para que las migraciones corran solo en el build.
+
+Los archivos subidos (documentos, evidencia) se persisten en **Netlify Blobs** en producción. En desarrollo local se guardan en `./uploads/`. Descarga autenticada: `GET /api/v1/files/{storageRef}`.
+
+**Nota:** Netlify Functions limitan el payload de request a ~6 MB. El límite de multer es 25 MB para entornos sin esa restricción.
 
 ### 3. Conectar el repositorio
 
