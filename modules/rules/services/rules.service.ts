@@ -128,7 +128,8 @@ export const rulesService: RulesServiceV1 = {
     }
 
     let status: RuleEvaluationStatus = 'eligible';
-    if (missingData.length) status = 'missing_data';
+    if (missingData.length && failedRules.length) status = 'manual_review';
+    else if (missingData.length) status = 'missing_data';
     else if (failedRules.length) status = 'not_eligible';
 
     const categoryHours = parseJson<Record<string, number>>(primary.category_hours);

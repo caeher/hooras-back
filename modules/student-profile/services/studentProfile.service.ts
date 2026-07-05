@@ -48,7 +48,7 @@ async function buildStudentProfile(
 
   const completedHours = await hoursService.getStudentHours(studentRef);
   const remainingHours = Math.max(0, eligibility.requiredHours - completedHours);
-  const docReqs = await documentsService.listRequirements();
+  const requiredDocuments = await documentsService.getStudentUploadMatrix(studentRef);
 
   return {
     studentRef,
@@ -56,7 +56,7 @@ async function buildStudentProfile(
     eligibility,
     completedHours,
     remainingHours,
-    requiredDocuments: docReqs,
+    requiredDocuments,
     recommendedProjectCategories: Object.keys(eligibility.requiredCategoryHours ?? {}),
   };
 }

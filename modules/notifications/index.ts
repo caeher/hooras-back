@@ -4,6 +4,7 @@ import { PlatformModuleDescriptor } from '../../platform/module/PlatformModule';
 import { NOTIFICATIONS_V1 } from '../../platform/contracts/services';
 import { manifest } from './manifest';
 import { notificationsService } from './services/notifications.service';
+import meNotificationsRoutes from './routes/meNotifications.routes';
 
 const instance = createBaseDomainModule(manifest);
 
@@ -16,6 +17,9 @@ const descriptor: PlatformModuleDescriptor = {
   },
   registerServices(registry) {
     registry.provide(NOTIFICATIONS_V1, manifest.moduleKey, notificationsService);
+  },
+  getRoutes() {
+    return [{ path: '/api/v1/me', router: meNotificationsRoutes }];
   },
 };
 
