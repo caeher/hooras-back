@@ -8,7 +8,7 @@ import { authMiddleware } from '../../app/middleware/auth';
 import { ForbiddenError, NotFoundError, BadRequestError } from '../../app/utils/errors';
 import { assertStudentEligibleForAction } from '../../app/rules/assertStudentEligible';
 import { writeAuditEvent } from '../../app/utils/audit';
-import { uploadMiddleware, storageRefFromFile } from '../../app/storage/multerConfig';
+import { uploadMiddleware, persistUploadedFile } from '../../app/storage/multerConfig';
 import { mapAssignment } from '../../modules/assignments/services/assignments.service';
 import { mapProject } from '../../modules/projects/services/projects.service';
 
@@ -147,7 +147,7 @@ router.post('/evidence', authMiddleware, uploadMiddleware.single('file'), asyncH
   if (!req.file) throw new BadRequestError('File is required');
 
   const id = uuidv4();
-  const storageRef = storageRefFromFile(req.file.filename);
+  const { storageRef } = await persistUploadedFile(req.file, 'files');
   await db('evidence').insert({
     id,
     owner_ref: studentRef,

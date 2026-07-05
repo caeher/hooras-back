@@ -6,7 +6,7 @@ import { authMiddleware } from '../../../app/middleware/auth';
 import { ForbiddenError, NotFoundError, BadRequestError } from '../../../app/utils/errors';
 import { assertStudentEligibleForAction } from '../../../app/rules/assertStudentEligible';
 import { writeAuditEvent } from '../../../app/utils/audit';
-import { uploadMiddleware, storageRefFromFile } from '../../../app/storage/multerConfig';
+import { uploadMiddleware, persistUploadedFile } from '../../../app/storage/multerConfig';
 import { getService } from '../../../platform/module/ServiceRegistry';
 import {
   DOCUMENTS_V1,
@@ -71,7 +71,7 @@ router.post(
       sizeBytes: req.file.size,
     });
 
-    const storageRef = storageRefFromFile(req.file.filename, 'documents');
+    const { storageRef } = await persistUploadedFile(req.file, 'documents');
     const [row] = await db('document_uploads')
       .insert({
         id: uuidv4(),
