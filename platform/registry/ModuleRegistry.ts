@@ -23,7 +23,9 @@ import {
   ModuleManifest,
   ModuleStatus,
   ModuleTestResult,
+  ModuleType,
 } from '../types';
+import { getInstanceSettings } from '../../core/setup/instanceSettings';
 
 interface CatalogEntry {
   descriptor: PlatformModuleDescriptor;
@@ -59,6 +61,38 @@ class ModuleRegistryClass {
     for (const descriptor of descriptors) {
       this.catalog.set(descriptor.moduleKey, { descriptor });
     }
+  }
+
+  listCatalogDescriptors(): PlatformModuleDescriptor[] {
+    return Array.from(this.catalog.values()).map((entry) => entry.descriptor);
+  }
+
+  async listAvailableForSetup(moduleType?: ModuleType) {
+    const items = this.listCatalogDescriptors()
+      .map(({ manifest, moduleKey, getDefaultConfig }) => ({
+        moduleKey,
+        displayName: manifest.displayName,
+        version: manifest.version,
+        moduleType: manifest.moduleType,
+        description: manifest.description,
+        dependencies: manifest.dependencies ?? [],
+        capabilities: manifest.capabilities,
+        features: manifest.features ?? [],
+        setupTier: manifest.setupTier ?? 'optional',
+        configurationSchema: manifest.configurationSchema ?? {},
+        requiredSecrets: manifest.requiredSecrets ?? [],
+        defaultConfig: getDefaultConfig?.() ?? null,
+      }))
+      .filter((item) => !moduleType || item.moduleType === moduleType);
+
+    const installedKeys = new Set(
+      (await db('installed_modules').select('module_key')).map((r) => r.module_key as string),
+    );
+
+    return items.map((item) => ({
+      ...item,
+      installed: installedKeys.has(item.moduleKey),
+    }));
   }
 
   async listAvailable() {
@@ -437,6 +471,19 @@ class ModuleRegistryClass {
   }
 
   async getActiveAuthConnector(): Promise<AuthConnectorModule> {
+    const settings = await getInstanceSettings();
+    const activeKey = settings.activeConnectors?.auth;
+
+    if (activeKey) {
+      const row = await db('installed_modules')
+        .where({ module_key: activeKey, enabled: true })
+        .first();
+      if (row) {
+        const instance = this.getInstance(activeKey);
+        if (isAuthConnector(instance)) return instance;
+      }
+    }
+
     const row = await db('installed_modules')
       .where({ module_type: 'auth_connector', enabled: true })
       .first();
@@ -449,6 +496,19 @@ class ModuleRegistryClass {
   }
 
   async getActiveStudentDataConnector(): Promise<StudentDataConnectorModule> {
+    const settings = await getInstanceSettings();
+    const activeKey = settings.activeConnectors?.student_data;
+
+    if (activeKey) {
+      const row = await db('installed_modules')
+        .where({ module_key: activeKey, enabled: true })
+        .first();
+      if (row) {
+        const instance = this.getInstance(activeKey);
+        if (isStudentDataConnector(instance)) return instance;
+      }
+    }
+
     const row = await db('installed_modules')
       .where({ module_type: 'student_data_connector', enabled: true })
       .first();
@@ -458,6 +518,48 @@ class ModuleRegistryClass {
       throw new BadRequestError('Student-data connector module not registered');
     }
     return instance;
+  }
+
+  async setActiveConnector(
+    connectorType: 'auth_connector' | 'student_data_connector',
+    moduleKey: string,
+  ): Promise<void> {
+    const descriptor = this.getDescriptor(moduleKey);
+    if (descriptor.manifest.moduleType !== connectorType) {
+      throw new BadRequestError(`Module ${moduleKey} is not a ${connectorType}`);
+    }
+
+    const others = await db('installed_modules').where({ module_type: connectorType });
+    for (const other of others) {
+      if ((other.module_key as string) !== moduleKey && other.enabled) {
+        await this.disableModule(other.module_key as string);
+      }
+    }
+
+    if (!(await this.isInstalled(moduleKey))) {
+      await this.installModule(moduleKey);
+    }
+
+    const row = await db('installed_modules').where({ module_key: moduleKey }).first();
+    if (!row?.enabled) {
+      await this.enableModule(moduleKey);
+    }
+  }
+
+  async bootstrapEnabledModules(): Promise<void> {
+    const rows = await db('installed_modules').where({ enabled: true });
+    const moduleKeys = rows.map((row) => row.module_key as string);
+    const orderedKeys = sortModuleKeysByDependencies(moduleKeys, (moduleKey) => {
+      return this.getDescriptor(moduleKey).manifest.dependencies ?? [];
+    });
+
+    for (const moduleKey of orderedKeys) {
+      await this.ensureFeaturesSeeded(moduleKey);
+      ModuleRouteManager.enableRoutes(moduleKey);
+      await this.activateModule(moduleKey);
+    }
+
+    await this.loadModuleConfigs();
   }
 
   async getCapabilities() {

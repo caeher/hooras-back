@@ -7,6 +7,7 @@ export const dummyAuthManifest = {
   author: 'Social Hours Platform',
   license: 'MIT',
   platformVersion: '0.1.0',
+  setupTier: 'required' as const,
   dependencies: [] as string[],
   capabilities: ['auth.login', 'auth.introspect', 'auth.userinfo', 'auth.roles'],
   features: [

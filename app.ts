@@ -12,6 +12,7 @@ import { authMiddleware, optionalAuth } from './app/middleware/auth';
 import { studentWhitelist } from './app/middleware/studentWhitelist';
 
 import healthRoutes from './core/health/health.routes';
+import setupRoutes from './core/setup/setup.routes';
 import modulesRoutes from './core/modules-admin/modules.routes';
 import providerConnectionsRoutes from './core/provider-connections/providerConnections.routes';
 import authRoutes from './core/auth/auth.routes';
@@ -46,6 +47,8 @@ export function createApp() {
   }
 
   app.use(healthRoutes);
+
+  app.use('/api/v1/setup', setupRoutes);
 
   app.use('/api/v1/modules', modulesRoutes);
   app.use('/api/v1/provider-connections', providerConnectionsRoutes);

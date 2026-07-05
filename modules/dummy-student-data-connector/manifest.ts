@@ -7,6 +7,7 @@ export const dummyStudentDataManifest = {
   author: 'Social Hours Platform',
   license: 'MIT',
   platformVersion: '0.1.0',
+  setupTier: 'required' as const,
   dependencies: [] as string[],
   capabilities: [
     'student.search', 'student.profile.read', 'student.progress.read',

@@ -1,9 +1,11 @@
 import { Express } from 'express';
 import { createApp } from '../app';
 import db from '../database';
+import { env } from '../config/env';
 import { ModuleLoader } from '../platform/module/ModuleLoader';
 import { BUILTIN_MODULE_KEYS } from '../platform/registry/moduleCatalog';
 import { ModuleRegistry } from '../platform/registry/ModuleRegistry';
+import { SetupService } from '../core/setup/SetupService';
 
 const DEFAULT_MODULE_KEYS = [...BUILTIN_MODULE_KEYS] as const;
 
@@ -33,15 +35,26 @@ export async function prepareDatabaseEnvironment(
 
   if (!options.skipMigrations) {
     await db.migrate.latest();
+  }
 
+  if (env.NODE_ENV === 'test') {
     const demoUserCount = await db('demo_users').count('id as count').first();
     if (Number(demoUserCount?.count ?? 0) === 0) {
       await db.seed.run();
     }
+
+    if (!(await SetupService.isComplete())) {
+      await ModuleRegistry.ensureDefaultModulesInstalled([...DEFAULT_MODULE_KEYS]);
+      await SetupService.markLegacyComplete();
+    } else {
+      await ModuleRegistry.bootstrapEnabledModules();
+    }
+    return;
   }
 
-  await ModuleRegistry.ensureDefaultModulesInstalled([...DEFAULT_MODULE_KEYS]);
-  await ModuleRegistry.loadModuleConfigs();
+  if (await SetupService.isComplete()) {
+    await ModuleRegistry.bootstrapEnabledModules();
+  }
 }
 
 export function createConfiguredApp(): Express {

@@ -27,6 +27,20 @@ export type ModuleStatus = 'installed' | 'enabled' | 'disabled' | 'misconfigured
 
 export type ModuleInstallState = 'available' | 'installed' | 'uninstalled';
 
+export type SetupTier = 'required' | 'recommended' | 'optional';
+
+export interface InstanceSettingsJson {
+  setupCompleted?: boolean;
+  setupCompletedAt?: string | null;
+  activeConnectors?: {
+    auth?: string;
+    student_data?: string;
+  };
+  locale?: string;
+  timezone?: string;
+  demoMode?: boolean;
+}
+
 export interface ModuleFeatureDefinition {
   key: string;
   name: string;
@@ -165,6 +179,8 @@ export interface ModuleManifest {
   permissions?: string[];
   webhookSubscriptions?: string[];
   eventSubscriptions?: string[];
+  /** Wizard grouping for first-run setup */
+  setupTier?: SetupTier;
 }
 
 export interface ModuleHealth {

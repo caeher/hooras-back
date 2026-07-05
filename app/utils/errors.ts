@@ -45,3 +45,9 @@ export class ExternalServiceError extends AppError {
     super(502, code, message, details);
   }
 }
+
+export class GoneError extends AppError {
+  constructor(message = 'Resource is no longer available', code = 'GONE') {
+    super(410, code, message);
+  }
+}

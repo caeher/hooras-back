@@ -7,6 +7,7 @@ export const manifest = {
   author: 'Social Hours Platform',
   license: 'MIT',
   platformVersion: '0.1.0',
+  setupTier: 'optional' as const,
   dependencies: ['projects'],
   requiredServices: ['projects.v1'],
   capabilities: ['imports.firecrawl', 'imports.review'],
