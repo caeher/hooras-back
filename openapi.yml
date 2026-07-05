@@ -3426,6 +3426,22 @@ components:
             createdAt:
               type: string
               format: date-time
+            evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/HourLogEvidence"
+
+    HourLogEvidence:
+      type: object
+      required: [ id, fileName, storageRef ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        storageRef:
+          type: string
 
     ApprovalStatus:
       type: string

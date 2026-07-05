@@ -11,6 +11,7 @@ import { writeAuditEvent } from '../../app/utils/audit';
 import { uploadMiddleware, persistUploadedFile } from '../../app/storage/multerConfig';
 import { mapAssignment } from '../../modules/assignments/services/assignments.service';
 import { mapProject } from '../../modules/projects/services/projects.service';
+import { enrichHourLogsWithEvidence, mapHourLogRow } from '../../modules/hours/services/hourLogMapper';
 
 const hourLogSchema = z.object({
   assignmentId: z.string().uuid(),
@@ -37,23 +38,6 @@ function mapApplication(row: Record<string, unknown>) {
     studentRef: row.student_ref,
     status: row.status,
     motivation: row.motivation,
-    rejectionReason: row.rejection_reason,
-    createdAt: (row.created_at as Date)?.toISOString?.() ?? row.created_at,
-  };
-}
-
-function mapHourLog(row: Record<string, unknown>) {
-  return {
-    id: row.id,
-    assignmentId: row.assignment_id,
-    date: row.date,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    durationHours: Number(row.duration_hours),
-    category: row.category,
-    description: row.description,
-    evidenceIds: typeof row.evidence_ids === 'string' ? JSON.parse(row.evidence_ids) : row.evidence_ids,
-    status: row.status,
     rejectionReason: row.rejection_reason,
     createdAt: (row.created_at as Date)?.toISOString?.() ?? row.created_at,
   };
@@ -87,7 +71,7 @@ router.get('/hour-logs', authMiddleware, asyncHandler(async (req: Request, res: 
   let query = db('hour_logs').whereIn('assignment_id', assignmentIds);
   if (req.query.status) query = query.where({ status: req.query.status });
   const rows = await query.orderBy('created_at', 'desc');
-  res.json(rows.map(mapHourLog));
+  res.json(await enrichHourLogsWithEvidence(rows.map(mapHourLogRow)));
 }));
 
 router.post('/hour-logs', authMiddleware, validate(hourLogSchema), asyncHandler(async (req: Request, res: Response) => {
@@ -139,7 +123,7 @@ router.post('/hour-logs', authMiddleware, validate(hourLogSchema), asyncHandler(
     entityId: row.id as string,
   });
 
-  res.status(201).json(mapHourLog(row));
+  res.status(201).json(mapHourLogRow(row));
 }));
 
 router.post('/evidence', authMiddleware, uploadMiddleware.single('file'), asyncHandler(async (req: Request, res: Response) => {

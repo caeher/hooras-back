@@ -10,6 +10,7 @@ import { NotFoundError, ForbiddenError } from '../../../app/utils/errors';
 import { writeAuditEvent } from '../../../app/utils/audit';
 import { getService } from '../../../platform/module/ServiceRegistry';
 import { NOTIFICATIONS_V1, NotificationsServiceV1 } from '../../../platform/contracts/services';
+import { enrichHourLogsWithEvidence, mapHourLogRow } from '../services/hourLogMapper';
 
 const hourLogSchema = z.object({
   assignmentId: z.string().uuid(),
@@ -26,23 +27,6 @@ const rejectSchema = z.object({ reason: z.string() });
 
 const router = Router();
 
-function mapHourLog(row: Record<string, unknown>) {
-  return {
-    id: row.id,
-    assignmentId: row.assignment_id,
-    date: row.date,
-    startTime: row.start_time,
-    endTime: row.end_time,
-    durationHours: Number(row.duration_hours),
-    category: row.category,
-    description: row.description,
-    evidenceIds: typeof row.evidence_ids === 'string' ? JSON.parse(row.evidence_ids) : row.evidence_ids,
-    status: row.status,
-    rejectionReason: row.rejection_reason,
-    createdAt: (row.created_at as Date)?.toISOString?.() ?? row.created_at,
-  };
-}
-
 router.get('/', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
   let query = db('hour_logs').select('*');
   if (req.query.assignmentId) query = query.where({ assignment_id: req.query.assignmentId });
@@ -54,7 +38,7 @@ router.get('/', authMiddleware, asyncHandler(async (req: Request, res: Response)
     query = query.whereIn('assignment_id', assignmentIds.length ? assignmentIds : ['00000000-0000-0000-0000-000000000000']);
   }
   const rows = await query.orderBy('created_at', 'desc');
-  res.json(rows.map(mapHourLog));
+  res.json(await enrichHourLogsWithEvidence(rows.map(mapHourLogRow)));
 }));
 
 router.post('/', authMiddleware, rbac('student'), validate(hourLogSchema), asyncHandler(async (req: Request, res: Response) => {
@@ -78,7 +62,7 @@ router.post('/', authMiddleware, rbac('student'), validate(hourLogSchema), async
       created_at: new Date(),
     })
     .returning('*');
-  res.status(201).json(mapHourLog(row));
+  res.status(201).json(mapHourLogRow(row));
 }));
 
 router.post('/:hourLogId/approve', authMiddleware, rbac('faculty_supervisor', 'external_supervisor', 'coordinator', 'admin'), asyncHandler(async (req: Request, res: Response) => {
@@ -100,7 +84,7 @@ router.post('/:hourLogId/approve', authMiddleware, rbac('faculty_supervisor', 'e
     hourLogId: row.id,
     durationHours: row.duration_hours,
   });
-  res.json(mapHourLog(row));
+  res.json(mapHourLogRow(row));
 }));
 
 router.post('/:hourLogId/reject', authMiddleware, rbac('faculty_supervisor', 'external_supervisor', 'coordinator', 'admin'), validate(rejectSchema), asyncHandler(async (req: Request, res: Response) => {
@@ -116,7 +100,7 @@ router.post('/:hourLogId/reject', authMiddleware, rbac('faculty_supervisor', 'ex
     hourLogId: row.id,
     reason: req.body.reason,
   });
-  res.json(mapHourLog(row));
+  res.json(mapHourLogRow(row));
 }));
 
 export default router;
