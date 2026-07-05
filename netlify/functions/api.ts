@@ -14,10 +14,12 @@ let cachedHandler: ReturnType<typeof serverless> | undefined;
 
 export const handler = async (event: APIGatewayProxyEvent, context: Context) => {
   const blobsContext = (event as APIGatewayProxyEvent & { blobs?: string }).blobs;
-  connectLambda({
-    ...(blobsContext ? { blobs: blobsContext } : {}),
-    headers: event.headers as Record<string, string>,
-  });
+  if (blobsContext) {
+    connectLambda({
+      blobs: blobsContext,
+      headers: event.headers as Record<string, string>,
+    });
+  }
 
   if (!cachedHandler) {
     const skipMigrations = process.env.SKIP_RUNTIME_MIGRATIONS === 'true';
